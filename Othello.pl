@@ -346,7 +346,8 @@ staticval(pos(GridId,_,_),Val,Level):-
 	(Level =:= 2,!,
 	 pieces_count_evaluation(GridId,CountVal,_,_),
 	 mobility_evaluation(GridId,MobilityVal),
-	 Val is (0.4 * CountVal) + (0.6 * MobilityVal))
+	 Val is (0.4 * CountVal) + (0.6 * MobilityVal),
+	 write(" Val = "),write(Val))
 	;
 	% advanced level, count pieces & approximate mobility & check corners 
 	(Level =:= 3,!,
