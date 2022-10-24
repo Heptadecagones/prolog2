@@ -354,7 +354,13 @@ staticval(pos(GridId,_,_),Val,Level):-
   	 pieces_count_evaluation(GridId,CountVal,_,_),
 	 mobility_evaluation(GridId,MobilityVal),
 	 corners_evaluation(GridId,CornersVal),
-	 Val is (0.25 * CountVal) + (0.35 * MobilityVal) + (0.4 * CornersVal)).
+	 Val is (0.25 * CountVal) + (0.35 * MobilityVal) + (0.4 * CornersVal));
+	% Level teste
+	 (Level =:= 4,!,
+  	 pieces_count_evaluation(GridId,CountVal,_,_),
+	 mobility_evaluation(GridId,MobilityVal),
+	 corners_evaluation(GridId,CornersVal),
+	 Val is 0).
 
 /* Heurstic evaluation function #1
    pieces_count_evaluation(+GridId,-Val,+MaxCount,+MinCount) 
@@ -545,7 +551,9 @@ get_max_depth(Level,MaxDepth):-
 	;
 	(Level =:= 2,!, MaxDepth = 3)	% intemediate 
 	;
-	(Level =:= 3,!, MaxDepth = 5)).	% advanced 
+	(Level =:= 3,!, MaxDepth = 5)	% advanced 
+	;
+	(Level =:= 4,!, MaxDepth = 1)).	% Test 
 
 /* user_exit(+X) - check if user requested to quit. if so, turn on appropriate flag */
 user_exit(X):-
@@ -606,12 +614,13 @@ get_board_dimension(N):-
 get_game_level(L):-
 	nl, write('Okay. Let''s set the game''s level - '),nl,
 	repeat, 
-	write('Please enter a number between 1 to 3 as follows: '),nl,
+	write('Please enter a number between 1 to 4 as follows: '),nl,
 	write('1 = Beginner'),nl,	
 	write('2 = Intermediate'),nl,
 	write('3 = Advanced'),nl, 
+	write('4 = Test'),nl,
 	get_user_input(L), 
-	((integer(L), L >= 1,L =< 3,!)	% validate input	
+	((integer(L), L >= 1,L =< 4,!)	% validate input	
 	 ;
 	 (user_exit(L),!, fail)			% user wishes to quit
 	 ;
