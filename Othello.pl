@@ -488,11 +488,12 @@ run:-
 	initialize_board(N),
 	print_starting_pos,
 	Count is 0,
+	Strategy is 1,
 	% play against computer 
 	((Mode =< 2, play_interactive_game(Count,Mode,Level,pos(0,1,_))	
 	 ;
 	 % watch automatic game computer vs computer 
-	 Mode =:= 3, play_automatic_game(Count,Level,Level2,pos(0,1,_)))
+	 Mode =:= 3, play_automatic_game(Strategy,Count,Level,Level2,pos(0,1,_)))
 	;
 	% user quit game explictly 
 	(user_exited_game,!, print_goodbye_message(PlayerName), cleanup)
@@ -506,27 +507,33 @@ run:-
 	
 /*************************************************************************
 * Automatic game AI vs AI                                                 
-* play_automatic_game(+Count,+Level,+Level2, +pos(Grid1,Computer1,_))                    
+* play_automatic_game(+Strategy,+Count,+Level,+Level2, +pos(Grid1,Computer1,_))                    
 *************************************************************************/
-play_automatic_game(Count,Level,Level2,pos(Grid1,Computer1,_)):-
+play_automatic_game(Strategy,Count,Level,Level2,pos(Grid1,Computer1,_)):-
 	% incase current player has a legal move 
 	get_legal_coordinates(Grid1,Computer1,_),!,
 	get_max_depth(Level,MaxDepth),
 	write(" \nLevel of Computer1 (x) is :"),write(Level),write(" \nLevel of Computer2 (o) is :"),write(Level2),
+	write(" \nStrategie du Computer1 is :"),write(Strategy),
 	write(" \nCoup Numero :"),write(Count),NewCount is Count+1,
-	alphabeta(pos(Grid1,Computer1,_),_,_,Pos2,_,0,MaxDepth,Level), % get best move 
+	/*Strategie 1 : si numéro du coup mod 5 ==0 (on change d'heuristique après le 5ème coup))*/
+	 ((X is Count mod 5,X =:= 0,Count =\= 0,Strategy =:= 1 ,!,
+	 NewLevel is Level+1);
+	 (NewLevel is Level)),
+	/*alphabeta*/
+	alphabeta(pos(Grid1,Computer1,_),_,_,Pos2,_,0,MaxDepth,NewLevel), % get best move 
 	Pos2 = pos(Grid2,Computer2,coordinate(I2,J2)),
 	nl,write('Computer'),write(Computer1),write(' plays ('),
 	write(I2),write(','),write(J2),write(').'),
 	nl, write('Current game position after placing a piece on this slot -'),
 	print_grid(Grid2),sleep(1.5),
-	play_automatic_game(NewCount,Level,Level2, pos(Grid2,Computer2,_))	% alternate turn
+	play_automatic_game(Strategy,NewCount,NewLevel,Level2, pos(Grid2,Computer2,_))	% alternate turn
 	;
 	% incase current player has no legal move, alternate turn 
 	get_other_player(Computer1,Computer2),
 	get_legal_coordinates(Grid1,Computer2,_),!,
 	nl,write('Computer'),write(Computer1),write(' has no legal moves.'),
-	play_automatic_game(Count,Level,Level2, pos(Grid1,Computer2,_))
+	play_automatic_game(Strategy,Count,Level,Level2, pos(Grid1,Computer2,_))
 	;
 	% both player have no legal move - end game 
 	assert(end_of_game(Grid1)),!,nl,write('End of Game'), fail.
