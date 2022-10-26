@@ -27,7 +27,7 @@
 :- dynamic no_legal_move/0. 	% flag indicating no legal moves for both players.
 :- dynamic player_stuck/1.   	% flag indicating this player has no legal moves 
 :- dynamic pos_evaluation/4. 	% (HashKey,Depth,Pos,Val) - precalculated position entries
-:- dynamic weight_board/3		% identifies the weight of the squares. Is only retracted and asserted at the beginning to adapt to the dimension
+:- dynamic weight_board/3.		% identifies the weight of the squares. Is only retracted and asserted at the beginning to adapt to the dimension
 
 /* cleanup - clear memory from all dynamic predicates */ 
 cleanup:-
@@ -354,7 +354,12 @@ staticval(pos(GridId,_,_),Val,Level):-
   	 pieces_count_evaluation(GridId,CountVal,_,_),
 	 mobility_evaluation(GridId,MobilityVal),
 	 corners_evaluation(GridId,CornersVal),
-	 Val is (0.25 * CountVal) + (0.35 * MobilityVal) + (0.4 * CornersVal)).
+	 Val is (0.25 * CountVal) + (0.35 * MobilityVal) + (0.4 * CornersVal))
+	% added for test
+	;
+	(Level =:= 4,!,
+	 weighted_squares(I,J, Weight_val),
+	 Val is Weight_val).
 
 /* Heurstic evaluation function #1
    pieces_count_evaluation(+GridId,-Val,+MaxCount,+MinCount) 
@@ -420,15 +425,16 @@ corners_evaluation(GridId,Val):-
 /* Heuristic evaluation : weighted squares
 	Improvement : add a random value to the weight, in order to let the IA play the neighborhood of the corners
 	weighted_squares(+I, +J, -dimension, -Val) */
-weighted_squares(I,J,dimension,Val) :-
+weighted_squares(I,J,Val) :-
 	weight-board(I,J, Weight),
 	Rand is random(abs(round(Max is Weight div 2))),
 	Val is Weight + Rand,
-	write(Val), write (Rand).
+	write(Val),
+	write(Rand).
 
 /* change the location of this method after it is finished !!! */
 initialize_weight_board(I,J):-
-	dimension(N)
+	dimension(N),
 	(
 		% Corners
 		(I =:= 1, !, J =:= 1, !, Weight is 4),
@@ -440,31 +446,31 @@ initialize_weight_board(I,J):-
 		(I =:= 1, !, J =:= 2, !, Weight is -3),
 		(I =:= 2, !, J =:= 1, !, Weight is -3),
 		(I =:= 2, !, J =:= 2, !, Weight is -4),
-		(I =:= 1, !, J =:= N-1, !, Weight is -3),
+		(I =:= 1, !, J =:= (N-1), !, Weight is -3),
 		(I =:= 2, !, J =:= N, !, Weight is -3),
-		(I =:= 2, !, J =:= N-1, !, Weight is -4),
-		/* WARNING : check comparing N-1 is fine, because it probably isn't !*/
-		(I =:= N-1, !, J =:= 1, !, Weight is -3),
+		(I =:= 2, !, J =:= (N-1), !, Weight is -4),
+		/* Warning checked, Exp1 =:= Exp2 verifies that the VALUE (and not tree equivalent) of Exp1 and Exp2 are equal */
+		(I =:= (N-1), !, J =:= 1, !, Weight is -3),
 		(I =:= N, !, J =:= 2, !, Weight is -3),
-		(I =:= N-1, !, J =:= 2, !, Weight is -4),
-		(I =:= N-1, !, J =:= N, !, Weight is -3),
-		(I =:= N, !, J =:= N-1, !, Weight is -3),
-		(I =:= N-1, !, J =:= N-1, !, Weight is -4),
+		(I =:= (N-1), !, J =:= 2, !, Weight is -4),
+		(I =:= (N-1), !, J =:= N, !, Weight is -3),
+		(I =:= N, !, J =:= (N-1), !, Weight is -3),
+		(I =:= (N-1), !, J =:= (N-1), !, Weight is -4),
 
 		% Borders filling
-		(I =:= 1, J >= 3, J =< N-2, Weight is 2),
-		(I =:= 2, J >= 3, J =< N-2, Weight is -1),
-		(I =:= N, J >= 3, J =< N-2, Weight is 2),
-		(I =:= N-1, J >= 3, J =< N-2, Weight is -1),
-		(J =:= 1, I >= 3, I =< N-2, Weight is 2),
-		(J =:= 2, I >= 3, I =< N-2, Weight is -1),
-		(J =:= N, I >= 3, I =< N-2, Weight is 2),
-		(J =:= N-1, I >= 3, I =< N-2, Weight is -1),
+		(I =:= 1, J >= 3, J =< (N-2), Weight is 2),
+		(I =:= 2, J >= 3, J =< (N-2), Weight is -1),
+		(I =:= N, J >= 3, J =< (N-2), Weight is 2),
+		(I =:= (N-1), J >= 3, J =< (N-2), Weight is -1),
+		(J =:= 1, I >= 3, I =< (N-2), Weight is 2),
+		(J =:= 2, I >= 3, I =< (N-2), Weight is -1),
+		(J =:= N, I >= 3, I =< (N-2), Weight is 2),
+		(J =:= (N-1), I >= 3, I =< (N-2), Weight is -1),
 		;
 
 		% Centre diagonals filling
 		(I =:= J, Weight is 1),
-		(I =:= N-J+1, Weight is 1),
+		(I =:= (N-J+1), Weight is 1),
 
 		;
 
@@ -608,7 +614,11 @@ get_max_depth(Level,MaxDepth):-
 	;
 	(Level =:= 2,!, MaxDepth = 3)	% intemediate 
 	;
-	(Level =:= 3,!, MaxDepth = 5)).	% advanced 
+	(Level =:= 3,!, MaxDepth = 5) % advanced
+	% Added for test
+	;
+	(Level =:= 0, !, MaxDepth = 3), initialize_weight_board(1,1)
+	).
 
 /* user_exit(+X) - check if user requested to quit. if so, turn on appropriate flag */
 user_exit(X):-
