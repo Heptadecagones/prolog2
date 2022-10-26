@@ -356,7 +356,10 @@ staticval(pos(GridId,_,_),Val,Level):-
 	 Val is (0.25 * CountVal) + (0.35 * MobilityVal) + (0.4 * CornersVal))
 	 ;
 	 (Level =:= 4,!,
-  	 Val is 0).
+  	 Val is 0)
+	 ;
+	 (Level =:= 5,!,
+	  c_x_evaluation(GridId,Val)).
 
 /* Heurstic evaluation function #1
    pieces_count_evaluation(+GridId,-Val,+MaxCount,+MinCount) 
@@ -419,6 +422,41 @@ corners_evaluation(GridId,Val):-
 	% sum result of all corners 
 	Val is C1Val+C2Val+C3Val+C4Val.	
 	
+c_x_evaluation(GridId,Val):-
+	%Get x and c values
+	dimension(N),
+	slot(GridId,coordinate(1,2),C1),
+	slot(GridId,coordinate(2,1),C2),
+	slot(GridId,coordinate(1,N-1),C3),
+	slot(GridId,coordinate(N-1,1),C4),
+	slot(GridId,coordinate(2,N),C5),
+	slot(GridId,coordinate(N,2),C6),
+	slot(GridId,coordinate(N,N-1),C7),
+	slot(GridId,coordinate(N-1,N),C8),
+
+	slot(GridId,coordinate(2,2),X1),
+	slot(GridId,coordinate(2,N-1),X2),
+	slot(GridId,coordinate(N-1,2),X3),
+	slot(GridId,coordinate(N-1,N-1),X4),
+
+	% assign each corner a grade 1/4 according to it's value (empty\max\min)
+	((C1 =:= 0,!,C1Val is 0) ; (C1 =:= 1,!,C1Val is 0.1) ; (C1Val is -0.1)),
+	((C2 =:= 0,!,C2Val is 0) ; (C2 =:= 1,!,C2Val is 0.1) ; (C2Val is -0.1)),
+	((C3 =:= 0,!,C3Val is 0) ; (C3 =:= 1,!,C3Val is 0.1) ; (C3Val is -0.1)),
+	((C4 =:= 0,!,C4Val is 0) ; (C4 =:= 1,!,C4Val is 0.1) ; (C4Val is -0.1)),
+	((C5 =:= 0,!,C5Val is 0) ; (C1 =:= 1,!,C5Val is 0.1) ; (C5Val is -0.1)),
+	((C6 =:= 0,!,C6Val is 0) ; (C2 =:= 1,!,C6Val is 0.1) ; (C6Val is -0.1)),
+	((C7 =:= 0,!,C7Val is 0) ; (C3 =:= 1,!,C7Val is 0.1) ; (C7Val is -0.1)),
+	((C8 =:= 0,!,C8Val is 0) ; (C4 =:= 1,!,C8Val is 0.1) ; (C8Val is -0.1)),
+
+	((X1 =:= 0,!,X1Val is 0) ; (X1 =:= 1,!,X1Val is 0.05) ; (X1Val is -0.05)),
+	((X2 =:= 0,!,X2Val is 0) ; (X2 =:= 1,!,X2Val is 0.05) ; (X2Val is -0.05)),
+	((X3 =:= 0,!,X3Val is 0) ; (X3 =:= 1,!,X3Val is 0.05) ; (X3Val is -0.05)),
+	((X4 =:= 0,!,X4Val is 0) ; (X4 =:= 1,!,X4Val is 0.05) ; (X4Val is -0.05)),
+
+	% sum result of all corners
+	Val is -C1Val-C2Val-C3Val-C4Val-C5Val-C6Val-C7Val-C8Val-X1Val-X2Val-X3Val-X4Val.
+
 /* get_hash_key(+Grid,-HashKey) 		                                 
    return a hash key for a given grid id to manage it's state in memory */
 get_hash_key(Grid,HashKey):-
@@ -446,6 +484,7 @@ run:-
 	get_board_dimension(N),
 	get_game_mode(Mode),	
 	get_game_level(Level),
+	get_game_level2(Level2),
 	initialize_board(N),
 	print_starting_pos,
 	Count is 0,
@@ -453,7 +492,7 @@ run:-
 	((Mode =< 2, play_interactive_game(Count,Mode,Level,pos(0,1,_))	
 	 ;
 	 % watch automatic game computer vs computer 
-	 Mode =:= 3, play_automatic_game(Level,pos(0,1,_)))
+	 Mode =:= 3, play_automatic_game(Count,Level,Level2,pos(0,1,_)))
 	;
 	% user quit game explictly 
 	(user_exited_game,!, print_goodbye_message(PlayerName), cleanup)
@@ -467,38 +506,41 @@ run:-
 	
 /*************************************************************************
 * Automatic game AI vs AI                                                 
-* play_automatic_game(+Level, +pos(Grid1,Computer1,_))                    
+* play_automatic_game(+Count,+Level,+Level2, +pos(Grid1,Computer1,_))                    
 *************************************************************************/
-play_automatic_game(Level,pos(Grid1,Computer1,_)):-
+play_automatic_game(Count,Level,Level2,pos(Grid1,Computer1,_)):-
 	% incase current player has a legal move 
 	get_legal_coordinates(Grid1,Computer1,_),!,
 	get_max_depth(Level,MaxDepth),
+	write(" \nLevel of Computer1 (x) is :"),write(Level),write(" \nLevel of Computer2 (o) is :"),write(Level2),
+	write(" \nCoup Numero :"),write(Count),NewCount is Count+1,
 	alphabeta(pos(Grid1,Computer1,_),_,_,Pos2,_,0,MaxDepth,Level), % get best move 
 	Pos2 = pos(Grid2,Computer2,coordinate(I2,J2)),
 	nl,write('Computer'),write(Computer1),write(' plays ('),
 	write(I2),write(','),write(J2),write(').'),
 	nl, write('Current game position after placing a piece on this slot -'),
 	print_grid(Grid2),sleep(1.5),
-	play_automatic_game(Level, pos(Grid2,Computer2,_))	% alternate turn
+	play_automatic_game(NewCount,Level,Level2, pos(Grid2,Computer2,_))	% alternate turn
 	;
 	% incase current player has no legal move, alternate turn 
 	get_other_player(Computer1,Computer2),
 	get_legal_coordinates(Grid1,Computer2,_),!,
 	nl,write('Computer'),write(Computer1),write(' has no legal moves.'),
-	play_automatic_game(Level, pos(Grid1,Computer2,_))
+	play_automatic_game(Count,Level,Level2, pos(Grid1,Computer2,_))
 	;
 	% both player have no legal move - end game 
 	assert(end_of_game(Grid1)),!,nl,write('End of Game'), fail.
 
 
 /*************************************************************************
-* Interactive game Human vs AI                                            
+* Interactive game Human vs AI (changement d'heuristique tous les 5 coups)                                            
 *************************************************************************/
 play_interactive_game(Count,Mode,Level,pos(GridId,Player1,_)):-	
 	% assure current player has a legal move  
 	(get_legal_coordinates(GridId,Player1,ValidCoordinates),
 	 retractall(player_stuck(_)),
 	 write("Coup Numero :"),write(Count),NewCount is Count+1,
+	 /*si numero count  mod 5 ==0 on incremente le niveau*/
 	 ((X is Count mod 5,X =:= 0,Count =\= 0 ,!,
 	 NewLevel is Level+1);
 	 (NewLevel is Level)),
@@ -616,6 +658,20 @@ get_board_dimension(N):-
    which heurstics estimates to do, the higher level, the harder it is to beat the PC */
 get_game_level(L):-
 	nl, write('Okay. Let''s set the game''s level - '),nl,
+	repeat, 
+	write('Please enter a number between 1 to 3 as follows: '),nl,
+	write('1 = Beginner'),nl,	
+	write('2 = Intermediate'),nl,
+	write('3 = Advanced'),nl, 
+	get_user_input(L), 
+	((integer(L), L >= 1,L =< 3,!)	% validate input	
+	 ;
+	 (user_exit(L),!, fail)			% user wishes to quit
+	 ;
+	 (print_invalid_input_message(L), fail)). % invalid input  
+	
+get_game_level2(L):-
+	nl, write('Okay. Let''s set the game''s level (if second AI) - '),nl,
 	repeat, 
 	write('Please enter a number between 1 to 3 as follows: '),nl,
 	write('1 = Beginner'),nl,	
