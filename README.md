@@ -1,3 +1,7 @@
+# Etape actuelle
+
+- [ ](Coder l'heuristique de stabilité (fonction stability_evaluation))
+
 # Notes on documentation
 
 #[Source I](https://courses.cs.washington.edu/courses/cse573/04au/Project/mini1/RUSSIA/Final_Paper.pdf)

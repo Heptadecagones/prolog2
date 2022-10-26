@@ -434,7 +434,7 @@ stability_evaluation(GridId,Val):-
         % Get legal moves
         CurrentPos = pos(GridId,_,_),
         moves(CurrentPos, LegalMoves, 0, 1),
-	slot(Id,coordinate(I,J),CurrentVal), 
+	%slot(Id,coordinate(I,J),CurrentVal), 
 	((CurrentVal =:= 0,!, NewMaxTemp is MaxTemp, NewMinTemp is MinTemp)
 	;
 	(CurrentVal =:= 1,!, NewMaxTemp is MaxTemp+compute_coin_stability(GridId,I,J,CurrentVal,CoinStability,LegalMoves), NewMinTemp is MinTemp)
@@ -451,7 +451,7 @@ stability_evaluation(GridId,Val):-
         ((TotalCount =:= 0,!, Val is 0) ; (Val is Delta / TotalCount)))).
 
 compute_coin_stability(_,_,_,_,CoinStability,[]):-
-    CoinStability is 1.
+    CoinStability is 0.5.
 
 % Calculate whether grid[i][j] can be of opposite Val next move
 compute_coin_stability(GridId,I,J,Val,CoinStability,[pos(NewGridId, _, _)|PosList]):-
