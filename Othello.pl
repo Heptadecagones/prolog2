@@ -353,7 +353,15 @@ staticval(pos(GridId,_,_),Val,Level):-
   	 pieces_count_evaluation(GridId,CountVal,_,_),
 	 mobility_evaluation(GridId,MobilityVal),
 	 corners_evaluation(GridId,CornersVal),
-	 Val is (0.25 * CountVal) + (0.35 * MobilityVal) + (0.4 * CornersVal)).
+	 Val is (0.25 * CountVal) + (0.35 * MobilityVal) + (0.4 * CornersVal)),
+
+        % Custom level 1 using dynamic heuristic weight adjustments
+	(Level =:= 4,!,
+  	 pieces_count_evaluation(GridId,CountVal,_,_),
+	 mobility_evaluation(GridId,MobilityVal),
+	 corners_evaluation(GridId,CornersVal),
+         stability_evaluation(GridId,StabilityVal),
+         Val is (0.25 * CountVal) + (0.35 * MobilityVal) + (0.2 * CornersVal) + (0.2 * StabilityVal).
 
 /* Heurstic evaluation function #1
    pieces_count_evaluation(+GridId,-Val,+MaxCount,+MinCount) 
@@ -415,7 +423,46 @@ corners_evaluation(GridId,Val):-
 	
 	% sum result of all corners 
 	Val is C1Val+C2Val+C3Val+C4Val.	
-	
+
+/* Heuristic eval function #4
+ * stability_evaluation(+Grid,-Val)
+ * Count the number of unflippable coins 
+ * TODO: Find unflippable coints 
+ */
+
+stability_evaluation(GridId,Val):-
+        % Get legal moves
+        CurrentPos = pos(GridId,_,_),
+        moves(CurrentPos, LegalMoves, 0, 1),
+	slot(Id,coordinate(I,J),CurrentVal), 
+	((CurrentVal =:= 0,!, NewMaxTemp is MaxTemp, NewMinTemp is MinTemp)
+	;
+	(CurrentVal =:= 1,!, NewMaxTemp is MaxTemp+compute_coin_stability(GridId,I,J,CurrentVal,CoinStability,LegalMoves), NewMinTemp is MinTemp)
+	;
+	(CurrentVal =:= 2,!, NewMinTemp is MinTemp+compute_coin_stability(GridId,I,J,CurrentVal,CoinStability,LegalMoves), NewMaxTemp is MaxTemp)),
+	dimension(N),
+	(((I =:= N, J =:= N,!, MaxTotal is NewMaxTemp, MinTotal is NewMinTemp))
+	;
+	(get_next_sequential_index(I,J,NewI,NewJ,N),
+	pieces_count(Id,MaxTotal,NewMaxTemp,MinTotal,NewMinTemp,NewI,NewJ))).
+        % compare 
+        (Delta is MaxCount - MinCount,
+        TotalCount is MaxCount + MinCount,
+        ((TotalCount =:= 0,!, Val is 0) ; (Val is Delta / TotalCount)))).
+
+compute_coin_stability(_,_,_,_,CoinStability,[]):-
+    CoinStability is 1.
+
+% Calculate whether grid[i][j] can be of opposite Val next move
+compute_coin_stability(GridId,I,J,Val,CoinStability,[pos(NewGridId, _, _)|PosList]):-
+    % Check value of slot in new position
+    slot(NewGridId, coordinate(I,J),CurrentVal),
+    % If it is flipped, the coin is flippable and we can return.
+    (CurrentVal =\= Val,!, CoinStability is -1, true),
+    %!, Green cut here?
+    % If it is not flipped, we continue. 
+    compute_coin_stability(GridId,I,J,Val,CoinStability,PosList).
+
 /* get_hash_key(+Grid,-HashKey) 		                                 
    return a hash key for a given grid id to manage it's state in memory */
 get_hash_key(Grid,HashKey):-
