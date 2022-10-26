@@ -270,7 +270,7 @@ moves(Pos,PosList,DepthLevel,MaxDepth):-	%just collect results from makeLegalMov
 	setof(pos(Id,Player,coordinate(I,J)),makeLegalMove(coordinate(I,J),Pos,pos(Id,Player,coordinate(I,J))),PosList). 
 
 /**************************************************************************
-* alphabeta(+Pos,+Alpha,+Beta,-GoodPos,-Val,+DepthLevel,+MaxDepth,+Level)         			          *
+* alphabeta(+Pos,+Alpha,+Beta,-GoodPos,-Val,+DepthLevel,+MaxDepth,+Level)   anass      			          *
 * This code is based on figure 24.5 implementation alphabeta algorithm*
 * Pos is a pos, Val is it's minimax value, best move from Pos leads  *
 * to GoodPos, Alpha is the minimal value that MAX is guaranteed to achieve*
