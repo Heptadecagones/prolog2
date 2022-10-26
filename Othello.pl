@@ -346,8 +346,7 @@ staticval(pos(GridId,_,_),Val,Level):-
 	(Level =:= 2,!,
 	 pieces_count_evaluation(GridId,CountVal,_,_),
 	 mobility_evaluation(GridId,MobilityVal),
-	 Val is (0.4 * CountVal) + (0.6 * MobilityVal),
-	 write(" Val = "),write(Val))
+	 Val is (0.4 * CountVal) + (0.6 * MobilityVal))
 	;
 	% advanced level, count pieces & approximate mobility & check corners 
 	(Level =:= 3,!,
@@ -449,9 +448,9 @@ run:-
 	get_game_level(Level),
 	initialize_board(N),
 	print_starting_pos,
-	
+	Count is 0,
 	% play against computer 
-	((Mode =< 2, play_interactive_game(Mode,Level,pos(0,1,_))	
+	((Mode =< 2, play_interactive_game(Count,Mode,Level,pos(0,1,_))	
 	 ;
 	 % watch automatic game computer vs computer 
 	 Mode =:= 3, play_automatic_game(Level,pos(0,1,_)))
@@ -495,21 +494,24 @@ play_automatic_game(Level,pos(Grid1,Computer1,_)):-
 /*************************************************************************
 * Interactive game Human vs AI                                            
 *************************************************************************/
-play_interactive_game(Mode,Level,pos(GridId,Player1,_)):-	
+play_interactive_game(Count,Mode,Level,pos(GridId,Player1,_)):-	
 	% assure current player has a legal move  
 	(get_legal_coordinates(GridId,Player1,ValidCoordinates),
 	 retractall(player_stuck(_)),
-	 
+	 write("Coup Numero :"),write(Count),NewCount is Count+1,
+	 ((X is Count mod 5,X =:= 0,Count =\= 0 ,!,
+	 NewLevel is Level+1);
+	 (NewLevel is Level)),
 	((%user to move 
 	 Mode =:= Player1,!,
-	 NewLevel is Level,write("NewLevel: "),write(NewLevel),	
+	 write("NewLevel: "),write(NewLevel),	
 	 get_coordinate_from_user(Player1,ValidCoordinates,UserCoordinate),
 	 makeLegalMove(UserCoordinate,pos(GridId,Player1,_),pos(NewId,Player2,_)))
 	;		
 	(%computer to move
 	 get_max_depth(Level,MaxDepth),
 	 !,
-	 NewLevel is Level+1,write("NewLevel: "),write(NewLevel),
+	 write("NewLevel: "),write(NewLevel),
 	 alphabeta(pos(GridId,Player1,_),_,_,pos(NewId,Player2,coordinate(I,J)),_,0,MaxDepth,Level),
 	 print_computer_move(I,J))),
 	
@@ -518,7 +520,7 @@ play_interactive_game(Mode,Level,pos(GridId,Player1,_)):-
 	  write('current position after placing a piece on this slot -'),
 	  print_grid(NewId), sleep(1),
 	  ((Mode =:= Player1,!, print_a_compliment,!, sleep(1)) ; (sleep(0.75))),
-	  play_interactive_game(Mode,NewLevel,pos(NewId,Player2,_))))  % continue to next round 
+	  play_interactive_game(NewCount,Mode,NewLevel,pos(NewId,Player2,_))))  % continue to next round 
 	;
 	
 	% incase current player is stuck skip him or end game 
@@ -532,7 +534,7 @@ play_interactive_game(Mode,Level,pos(GridId,Player1,_)):-
 		
 		% else, if other player has a move, shift the play to him  
 		(print_skip_turn_message(Mode,Player1),
-		 play_interactive_game(Mode,Level,pos(GridId,Player2,_))))).
+		 play_interactive_game(Count,Mode,Level,pos(GridId,Player2,_))))).
 
 
 /*************************************************************************
