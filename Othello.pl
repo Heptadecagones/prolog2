@@ -39,7 +39,8 @@ cleanup:-
 	retractall(end_of_game(_)),
 	retractall(no_legal_move),
 	retractall(player_stuck(_)),
-	retractall(pos_evaluation(_,_,_,_)).
+	retractall(pos_evaluation(_,_,_,_)),
+	retractall(weight_board(_,_,_)).
 
 
 /******************************************************************************
@@ -425,6 +426,7 @@ corners_evaluation(GridId,Val):-
 /* Heuristic evaluation : weighted squares
 	Improvement : add a random value to the weight, in order to let the IA play the neighborhood of the corners
 	weighted_squares(+I, +J, -dimension, -Val) */
+/* To modify, take GridId as a parameter and not I and J (that are not used by the other heuristics) */
 weighted_squares(I,J,Val) :-
 	weight-board(I,J, Weight),
 	Max is div(Weight, 2),
@@ -517,6 +519,7 @@ run:-
 	get_game_level(Level),
 	initialize_board(N),
 	print_starting_pos,
+	initialize_weight_board(1,1),
 	
 	% play against computer 
 	((Mode =< 2, play_interactive_game(Mode,Level,pos(0,1,_))	
@@ -619,7 +622,7 @@ get_max_depth(Level,MaxDepth):-
 	(Level =:= 3,!, MaxDepth = 5) % advanced
 	% Added for test
 	;
-	(Level =:= 0, !, MaxDepth = 3), initialize_weight_board(1,1)
+	(Level =:= 0, !, MaxDepth = 3)
 	).
 
 /* user_exit(+X) - check if user requested to quit. if so, turn on appropriate flag */
