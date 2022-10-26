@@ -354,13 +354,10 @@ staticval(pos(GridId,_,_),Val,Level):-
   	 pieces_count_evaluation(GridId,CountVal,_,_),
 	 mobility_evaluation(GridId,MobilityVal),
 	 corners_evaluation(GridId,CornersVal),
-	 Val is (0.25 * CountVal) + (0.35 * MobilityVal) + (0.4 * CornersVal));
-	% Level teste
+	 Val is (0.25 * CountVal) + (0.35 * MobilityVal) + (0.4 * CornersVal))
+	 ;
 	 (Level =:= 4,!,
-  	 pieces_count_evaluation(GridId,CountVal,_,_),
-	 mobility_evaluation(GridId,MobilityVal),
-	 corners_evaluation(GridId,CornersVal),
-	 Val is 0).
+  	 Val is 0).
 
 /* Heurstic evaluation function #1
    pieces_count_evaluation(+GridId,-Val,+MaxCount,+MinCount) 
@@ -502,26 +499,28 @@ play_interactive_game(Mode,Level,pos(GridId,Player1,_)):-
 	% assure current player has a legal move  
 	(get_legal_coordinates(GridId,Player1,ValidCoordinates),
 	 retractall(player_stuck(_)),
-
+	 
 	((%user to move 
-	 Mode =:= Player1,!,	
+	 Mode =:= Player1,!,
+	 NewLevel is Level,write("NewLevel: "),write(NewLevel),	
 	 get_coordinate_from_user(Player1,ValidCoordinates,UserCoordinate),
 	 makeLegalMove(UserCoordinate,pos(GridId,Player1,_),pos(NewId,Player2,_)))
 	;		
 	(%computer to move
 	 get_max_depth(Level,MaxDepth),
-	 !,alphabeta(pos(GridId,Player1,_),_,_,pos(NewId,Player2,coordinate(I,J)),_,0,MaxDepth,Level),
+	 !,
+	 NewLevel is Level+1,write("NewLevel: "),write(NewLevel),
+	 alphabeta(pos(GridId,Player1,_),_,_,pos(NewId,Player2,coordinate(I,J)),_,0,MaxDepth,Level),
 	 print_computer_move(I,J))),
 	
 	 % print updated position and shift controll to next player  
 	 (not(end_of_game(_)),not(user_exited_game),nl,
 	  write('current position after placing a piece on this slot -'),
 	  print_grid(NewId), sleep(1),
-	  ((Mode =:= Player1,!, print_a_compliment,!, sleep(1)) ; (sleep(0.75)),write(Level),write("is my Level")),
-	  play_interactive_game(Mode,newLevel,pos(NewId,Player2,_))  % continuer to nexte round
-		,Level is newLevel+1))
+	  ((Mode =:= Player1,!, print_a_compliment,!, sleep(1)) ; (sleep(0.75))),
+	  play_interactive_game(Mode,NewLevel,pos(NewId,Player2,_))))  % continue to next round 
 	;
-
+	
 	% incase current player is stuck skip him or end game 
 	(assert(player_stuck(Player1)),
 		get_other_player(Player1,Player2),
@@ -552,16 +551,15 @@ get_max_depth(Level,MaxDepth):-
 	;
 	(Level =:= 2,!, MaxDepth = 3)	% intemediate 
 	;
-	(Level =:= 3,!, MaxDepth = 5)	% advanced 
+	(Level =:= 3,!, MaxDepth = 5)% advanced 
 	;
-	(Level =:= 4,!, MaxDepth = 1)).	% Test 
+	(Level =:= 4,!, MaxDepth = 1)).	
+
 
 /* user_exit(+X) - check if user requested to quit. if so, turn on appropriate flag */
 user_exit(X):-
 	(nonvar(X), (X = 'EXIT' ; X = exit), assert(user_exited_game)).
-
-incr(X):-
-	X is X+1.	
+	
 	
 /*************************************************************************
 * I\O Routines                                                           *
@@ -617,13 +615,12 @@ get_board_dimension(N):-
 get_game_level(L):-
 	nl, write('Okay. Let''s set the game''s level - '),nl,
 	repeat, 
-	write('Please enter a number between 1 to 4 as follows: '),nl,
+	write('Please enter a number between 1 to 3 as follows: '),nl,
 	write('1 = Beginner'),nl,	
 	write('2 = Intermediate'),nl,
 	write('3 = Advanced'),nl, 
-	write('4 = Test'),nl,
 	get_user_input(L), 
-	((integer(L), L >= 1,L =< 4,!)	% validate input	
+	((integer(L), L >= 1,L =< 3,!)	% validate input	
 	 ;
 	 (user_exit(L),!, fail)			% user wishes to quit
 	 ;
@@ -800,3 +797,4 @@ print_game_results(Mode,FinalGrid,PlayerName):-
 	(write('Sorry '),write(PlayerName),write('. I won this time,'),
 	 nl,write('but i''ll tell you the truth it was not easy.'),
 	 nl,write('Maybe next time you''ll get a chance to strike back.'),nl,nl)).
+	 
