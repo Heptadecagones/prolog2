@@ -488,7 +488,7 @@ run:-
 	initialize_board(N),
 	print_starting_pos,
 	Count is 0,
-	Strategy is 1,
+	Strategy is 0,
 	% play against computer 
 	((Mode =< 2, play_interactive_game(Count,Mode,Level,pos(0,1,_))	
 	 ;
@@ -526,7 +526,7 @@ play_automatic_game(Strategy,Count,Level,Level2,pos(Grid1,Computer1,_)):-
 	nl,write('Computer'),write(Computer1),write(' plays ('),
 	write(I2),write(','),write(J2),write(').'),
 	nl, write('Current game position after placing a piece on this slot -'),
-	print_grid(Grid2),sleep(1.5),
+	print_grid(Grid2),
 	play_automatic_game(Strategy,NewCount,NewLevel,Level2, pos(Grid2,Computer2,_))	% alternate turn
 	;
 	% incase current player has no legal move, alternate turn 
