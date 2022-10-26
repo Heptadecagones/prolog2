@@ -16,7 +16,7 @@
 * 		     | The rules of the game are the classical othello rules.   	  *
 *			 | For further details on how to play, see the following link:	  *
 *			 | https://www.wikihow.com/Play-Othello							  *
-*------------|--------------------------------------------------------------*/%.
+*------------|--------------------------------------------------------------*/
 /* dynamic utllity predicates & data structures  for interal representation   */
 :- dynamic dimension/1.	 		% N - dimension of the quadratic board 		
 :- dynamic coordinate/1. 		% coordinate(I,J), indices of a specific slot on board 
@@ -26,7 +26,8 @@
 :- dynamic end_of_game/1.	 	% flag indicating end of game & last final grid
 :- dynamic no_legal_move/0. 	% flag indicating no legal moves for both players.
 :- dynamic player_stuck/1.   	% flag indicating this player has no legal moves 
-:- dynamic pos_evaluation/4. 	% (HashKey,Depth,Pos,Val) - precalculated position entries 
+:- dynamic pos_evaluation/4. 	% (HashKey,Depth,Pos,Val) - precalculated position entries
+:- dynamic weight_board/3		% identifies the weight of the squares. Is only retracted and asserted at the beginning to adapt to the dimension
 
 /* cleanup - clear memory from all dynamic predicates */ 
 cleanup:-
@@ -43,7 +44,7 @@ cleanup:-
 
 /******************************************************************************
 *________________Internal representation logic & utillities module____________*
-*****************************************************************************/%.
+*****************************************************************************/
 % list of all possible directions in grid for supporting non-determinism 
 direction_list([north,northEast,east,southEast,south,southWest,west,northWest]).
 
@@ -252,7 +253,7 @@ get_legal_coordinates(Id,Player,Coordinates):-
 
 /****************************************************************************
 *______________________________ AlphaBeta module	___________________ _____
-*****************************************************************************/%.
+*****************************************************************************/
 
 /* max_to_move(+POS), min_to_move(+POS) 						   */
 max_to_move(pos(_,1,_)). % true iff it's MAX turn to move  (x player) 
@@ -263,7 +264,7 @@ min_to_move(pos(_,2,_)). % true iff it's MIN turn to move  (o player)
 * moves(+Pos,-PosList,+DepthLevel,+MaxDepth)                   		   *
 * PosList is a list of all possible legal successor posistion of  Pos. *
 * DepthLevel is current depth level, MaxDepth is max depth level       *
-**********************************************************************/%.
+**********************************************************************/
 moves(Pos,PosList,DepthLevel,MaxDepth):-	%just collect results from makeLegalMove predicate
 	DepthLevel =< MaxDepth,
 	% just collect all possible legal moves - 
@@ -276,7 +277,7 @@ moves(Pos,PosList,DepthLevel,MaxDepth):-	%just collect results from makeLegalMov
 * to GoodPos, Alpha is the minimal value that MAX is guaranteed to achieve*
 * Beta is the maximal value that MAX can hope to achieve. 				  *
 * First call is with alpha = -infinity & Beta with +infinity.             *
-*************************************************************************/%.
+*************************************************************************/
 alphabeta(CurrentPos,Alpha,Beta,BestSuccessorPos,Val,DepthLevel,MaxDepth,Level):-
 	% check if results already exists on database 
 	ActualDepth is MaxDepth - DepthLevel,
@@ -294,8 +295,8 @@ alphabeta(CurrentPos,Alpha,Beta,BestSuccessorPos,Val,DepthLevel,MaxDepth,Level):
 	;
 	staticval(CurrentPos,Val,Level)). % terminal seatchtree node - evaluate directly  
 
-/* find a 'good enough' pos GoodPos in the list PosList */%.
-/* so that the backed-up value Val of GoodPos is a good enough approximation */%.
+/* find a 'good enough' pos GoodPos in the list PosList */
+/* so that the backed-up value Val of GoodPos is a good enough approximation */
 /* with respect to Alpha and Beta */
 boundedbest([Pos|PosList],Alpha,Beta,GoodPos,GoodVal,DepthLevel,MaxDepth,Level):-
 	alphabeta(Pos,Alpha,Beta,_,Val,DepthLevel,MaxDepth,Level),
@@ -416,6 +417,69 @@ corners_evaluation(GridId,Val):-
 	% sum result of all corners 
 	Val is C1Val+C2Val+C3Val+C4Val.	
 	
+/* Heuristic evaluation : weighted squares
+	Improvement : add a random value to the weight, in order to let the IA play the neighborhood of the corners
+	weighted_squares(+I, +J, -dimension, -Val) */
+weighted_squares(I,J,dimension,Val) :-
+	weight-board(I,J, Weight),
+	Rand is random(abs(round(Max is Weight div 2))),
+	Val is Weight + Rand,
+	write(Val), write (Rand).
+
+/* change the location of this method after it is finished !!! */
+initialize_weight_board(I,J):-
+	dimension(N)
+	(
+		% Corners
+		(I =:= 1, !, J =:= 1, !, Weight is 4),
+		(I =:= 1, !, J =:= N, !, Weight is 4),
+		(I =:= N, !, J =:= 1, !, Weight is 4),
+		(I =:= N, !, J =:= N, !, Weight is 4),
+
+		% Corners neighbor
+		(I =:= 1, !, J =:= 2, !, Weight is -3),
+		(I =:= 2, !, J =:= 1, !, Weight is -3),
+		(I =:= 2, !, J =:= 2, !, Weight is -4),
+		(I =:= 1, !, J =:= N-1, !, Weight is -3),
+		(I =:= 2, !, J =:= N, !, Weight is -3),
+		(I =:= 2, !, J =:= N-1, !, Weight is -4),
+		/* WARNING : check comparing N-1 is fine, because it probably isn't !*/
+		(I =:= N-1, !, J =:= 1, !, Weight is -3),
+		(I =:= N, !, J =:= 2, !, Weight is -3),
+		(I =:= N-1, !, J =:= 2, !, Weight is -4),
+		(I =:= N-1, !, J =:= N, !, Weight is -3),
+		(I =:= N, !, J =:= N-1, !, Weight is -3),
+		(I =:= N-1, !, J =:= N-1, !, Weight is -4),
+
+		% Borders filling
+		(I =:= 1, J >= 3, J =< N-2, Weight is 2),
+		(I =:= 2, J >= 3, J =< N-2, Weight is -1),
+		(I =:= N, J >= 3, J =< N-2, Weight is 2),
+		(I =:= N-1, J >= 3, J =< N-2, Weight is -1),
+		(J =:= 1, I >= 3, I =< N-2, Weight is 2),
+		(J =:= 2, I >= 3, I =< N-2, Weight is -1),
+		(J =:= N, I >= 3, I =< N-2, Weight is 2),
+		(J =:= N-1, I >= 3, I =< N-2, Weight is -1),
+		;
+
+		% Centre diagonals filling
+		(I =:= J, Weight is 1),
+		(I =:= N-J+1, Weight is 1),
+
+		;
+
+		% Centre filling (everything else)
+		Weight is 0
+	),
+
+	retract(weight_board(I,J,X)),
+	assert(weight_board(I,J,Weight)),
+	% Recursive call
+	((I =:= N, J =:= N, !) ;
+	(J =:= N, I =\= N, New I is I + 1, NewJ is 1) ;
+	(I =\= N, J =\= N, New I is I + 1, NewJ is J + 1)),
+	initialize_weight_board(NewI, NewJ).
+
 /* get_hash_key(+Grid,-HashKey) 		                                 
    return a hash key for a given grid id to manage it's state in memory */
 get_hash_key(Grid,HashKey):-
@@ -434,7 +498,7 @@ get_hash_key(Grid,[Head|Tail],I,J,N):-		% case 2 of internal routine: keep recur
 
 /****************************************************************************
 *__________________Game application & I\O interaction module________________*
-***************************************************************************/%.
+***************************************************************************/
 % main program to initiate entire application: run/0
 run:-
 	print_welcome_message,
@@ -465,7 +529,7 @@ run:-
 /*************************************************************************
 * Automatic game AI vs AI                                                 
 * play_automatic_game(+Level, +pos(Grid1,Computer1,_))                    
-*************************************************************************/%.
+*************************************************************************/
 play_automatic_game(Level,pos(Grid1,Computer1,_)):-
 	% incase current player has a legal move 
 	get_legal_coordinates(Grid1,Computer1,_),!,
@@ -490,7 +554,7 @@ play_automatic_game(Level,pos(Grid1,Computer1,_)):-
 
 /*************************************************************************
 * Interactive game Human vs AI                                            
-*************************************************************************/%.
+*************************************************************************/
 play_interactive_game(Mode,Level,pos(GridId,Player1,_)):-	
 	% assure current player has a legal move  
 	(get_legal_coordinates(GridId,Player1,ValidCoordinates),
@@ -530,7 +594,7 @@ play_interactive_game(Mode,Level,pos(GridId,Player1,_)):-
 
 /*************************************************************************
 * Game Utillity Routines                                                 *
-*************************************************************************/%.
+*************************************************************************/
 
 /* get_other_player(+Player1,-Player2) */ 
 get_other_player(Player1,Player2):-
@@ -553,7 +617,7 @@ user_exit(X):-
 	
 /*************************************************************************
 * I\O Routines                                                           *
-*************************************************************************/%.
+*************************************************************************/
 
 /* get_user_input(-InputString) : main input routine                           
    get next line from input stream, return first token, drop rest of the line  */
@@ -669,7 +733,7 @@ get_coordinate_from_user(Player, ValidCoordinates,Coordinate):-
 
 /*************************************************************************
 * Printing Routines                                                      *
-*************************************************************************/%.
+*************************************************************************/
 
 /* print_welcome_message */ 
 print_welcome_message:-
