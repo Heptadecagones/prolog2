@@ -346,14 +346,21 @@ staticval(pos(GridId,_,_),Val,Level):-
 	(Level =:= 2,!,
 	 pieces_count_evaluation(GridId,CountVal,_,_),
 	 mobility_evaluation(GridId,MobilityVal),
-	 Val is (0.4 * CountVal) + (0.6 * MobilityVal))
+	 Val is (0.4 * CountVal) + (0.6 * MobilityVal),
+	 write(" Val = "),write(Val))
 	;
 	% advanced level, count pieces & approximate mobility & check corners 
 	(Level =:= 3,!,
   	 pieces_count_evaluation(GridId,CountVal,_,_),
 	 mobility_evaluation(GridId,MobilityVal),
 	 corners_evaluation(GridId,CornersVal),
-	 Val is (0.25 * CountVal) + (0.35 * MobilityVal) + (0.4 * CornersVal)).
+	 Val is (0.25 * CountVal) + (0.35 * MobilityVal) + (0.4 * CornersVal));
+	% Level teste
+	 (Level =:= 4,!,
+  	 pieces_count_evaluation(GridId,CountVal,_,_),
+	 mobility_evaluation(GridId,MobilityVal),
+	 corners_evaluation(GridId,CornersVal),
+	 Val is 0).
 
 /* Heurstic evaluation function #1
    pieces_count_evaluation(+GridId,-Val,+MaxCount,+MinCount) 
@@ -434,7 +441,7 @@ get_hash_key(Grid,[Head|Tail],I,J,N):-		% case 2 of internal routine: keep recur
 
 /****************************************************************************
 *__________________Game application & I\O interaction module________________*
-***************************************************************************/%.
+***************************************************************************/
 % main program to initiate entire application: run/0
 run:-
 	print_welcome_message,
@@ -465,7 +472,7 @@ run:-
 /*************************************************************************
 * Automatic game AI vs AI                                                 
 * play_automatic_game(+Level, +pos(Grid1,Computer1,_))                    
-*************************************************************************/%.
+*************************************************************************/
 play_automatic_game(Level,pos(Grid1,Computer1,_)):-
 	% incase current player has a legal move 
 	get_legal_coordinates(Grid1,Computer1,_),!,
@@ -490,12 +497,12 @@ play_automatic_game(Level,pos(Grid1,Computer1,_)):-
 
 /*************************************************************************
 * Interactive game Human vs AI                                            
-*************************************************************************/%.
+*************************************************************************/
 play_interactive_game(Mode,Level,pos(GridId,Player1,_)):-	
 	% assure current player has a legal move  
 	(get_legal_coordinates(GridId,Player1,ValidCoordinates),
 	 retractall(player_stuck(_)),
-	 
+
 	((%user to move 
 	 Mode =:= Player1,!,	
 	 get_coordinate_from_user(Player1,ValidCoordinates,UserCoordinate),
@@ -510,10 +517,11 @@ play_interactive_game(Mode,Level,pos(GridId,Player1,_)):-
 	 (not(end_of_game(_)),not(user_exited_game),nl,
 	  write('current position after placing a piece on this slot -'),
 	  print_grid(NewId), sleep(1),
-	  ((Mode =:= Player1,!, print_a_compliment,!, sleep(1)) ; (sleep(0.75))),
-	  play_interactive_game(Mode,Level,pos(NewId,Player2,_))))  % continue to next round 
+	  ((Mode =:= Player1,!, print_a_compliment,!, sleep(1)) ; (sleep(0.75)),write(Level),write("is my Level")),
+	  play_interactive_game(Mode,newLevel,pos(NewId,Player2,_))  % continuer to nexte round
+		,Level is newLevel+1))
 	;
-	
+
 	% incase current player is stuck skip him or end game 
 	(assert(player_stuck(Player1)),
 		get_other_player(Player1,Player2),
@@ -544,12 +552,16 @@ get_max_depth(Level,MaxDepth):-
 	;
 	(Level =:= 2,!, MaxDepth = 3)	% intemediate 
 	;
-	(Level =:= 3,!, MaxDepth = 5)).	% advanced 
+	(Level =:= 3,!, MaxDepth = 5)	% advanced 
+	;
+	(Level =:= 4,!, MaxDepth = 1)).	% Test 
 
 /* user_exit(+X) - check if user requested to quit. if so, turn on appropriate flag */
 user_exit(X):-
 	(nonvar(X), (X = 'EXIT' ; X = exit), assert(user_exited_game)).
-	
+
+incr(X):-
+	X is X+1.	
 	
 /*************************************************************************
 * I\O Routines                                                           *
@@ -605,12 +617,13 @@ get_board_dimension(N):-
 get_game_level(L):-
 	nl, write('Okay. Let''s set the game''s level - '),nl,
 	repeat, 
-	write('Please enter a number between 1 to 3 as follows: '),nl,
+	write('Please enter a number between 1 to 4 as follows: '),nl,
 	write('1 = Beginner'),nl,	
 	write('2 = Intermediate'),nl,
 	write('3 = Advanced'),nl, 
+	write('4 = Test'),nl,
 	get_user_input(L), 
-	((integer(L), L >= 1,L =< 3,!)	% validate input	
+	((integer(L), L >= 1,L =< 4,!)	% validate input	
 	 ;
 	 (user_exit(L),!, fail)			% user wishes to quit
 	 ;
@@ -678,12 +691,12 @@ print_welcome_message:-
 	
 /* print_greeting_message(+PlayerName) */
 print_greeting_message(PlayerName):-
-	write('Hello '), write(PlayerName), write('!'),nl,sleep(1),
-	write('This application enables a few possible different game settings.'),nl,sleep(1),
-	write('Inorder to gain best game experience, '),nl,sleep(1),
-	write('select your preferences as instructed below.'),nl,sleep(1),
-	write('Please note: If by any stage you wish to quit, just type in ''EXIT'' or ''exit''.'),nl, sleep(1),
-	nl,write('Okay, first things first... '), nl, sleep(1).
+	write('Hello '), write(PlayerName), write('!'),nl,
+	write('This application enables a few possible different game settings.'),nl,
+	write('Inorder to gain best game experience, '),nl,
+	write('select your preferences as instructed below.'),nl,
+	write('Please note: If by any stage you wish to quit, just type in ''EXIT'' or ''exit''.'),nl,
+	nl,write('Okay, first things first... '), nl.
 
 
 /* print_starting_pos */ 
@@ -787,4 +800,3 @@ print_game_results(Mode,FinalGrid,PlayerName):-
 	(write('Sorry '),write(PlayerName),write('. I won this time,'),
 	 nl,write('but i''ll tell you the truth it was not easy.'),
 	 nl,write('Maybe next time you''ll get a chance to strike back.'),nl,nl)).
-	 
