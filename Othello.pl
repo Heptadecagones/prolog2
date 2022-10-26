@@ -427,7 +427,8 @@ corners_evaluation(GridId,Val):-
 	weighted_squares(+I, +J, -dimension, -Val) */
 weighted_squares(I,J,Val) :-
 	weight-board(I,J, Weight),
-	Rand is random(abs(round(Max is Weight div 2))),
+	Max is div(Weight, 2),
+	Rand is random(abs(round(Max))),
 	Val is Weight + Rand,
 	write(Val),
 	write(Rand).
@@ -465,12 +466,13 @@ initialize_weight_board(I,J):-
 		(J =:= 1, I >= 3, I =< (N-2), Weight is 2),
 		(J =:= 2, I >= 3, I =< (N-2), Weight is -1),
 		(J =:= N, I >= 3, I =< (N-2), Weight is 2),
-		(J =:= (N-1), I >= 3, I =< (N-2), Weight is -1),
+		(J =:= (N-1), I >= 3, I =< (N-2), Weight is -1)
+
 		;
 
 		% Centre diagonals filling
 		(I =:= J, Weight is 1),
-		(I =:= (N-J+1), Weight is 1),
+		(I =:= (N-J+1), Weight is 1)
 
 		;
 
@@ -482,8 +484,8 @@ initialize_weight_board(I,J):-
 	assert(weight_board(I,J,Weight)),
 	% Recursive call
 	((I =:= N, J =:= N, !) ;
-	(J =:= N, I =\= N, New I is I + 1, NewJ is 1) ;
-	(I =\= N, J =\= N, New I is I + 1, NewJ is J + 1)),
+	(J =:= N, I =\= N, NewI is I + 1, NewJ is 1) ;
+	(I =\= N, J =\= N, NewI is I + 1, NewJ is J + 1)),
 	initialize_weight_board(NewI, NewJ).
 
 /* get_hash_key(+Grid,-HashKey) 		                                 
