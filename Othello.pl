@@ -450,41 +450,41 @@ initialize_weight_board(I,J):-
 	dimension(N),
 	(
 		% Corners
-		(I =:= 1, !, J =:= 1, !, Weight is 4),
-		(I =:= 1, !, J =:= N, !, Weight is 4),
-		(I =:= N, !, J =:= 1, !, Weight is 4),
-		(I =:= N, !, J =:= N, !, Weight is 4),
+		(I =:= 1, J =:= 1, Weight is 4, !);
+		(I =:= 1, J =:= N, Weight is 4, !);
+		(I =:= N, J =:= 1, Weight is 4, !);
+		(I =:= N, J =:= N, Weight is 4, !);
 
 		% Corners neighbor
-		(I =:= 1, !, J =:= 2, !, Weight is -3),
-		(I =:= 2, !, J =:= 1, !, Weight is -3),
-		(I =:= 2, !, J =:= 2, !, Weight is -4),
-		(I =:= 1, !, J =:= (N-1), !, Weight is -3),
-		(I =:= 2, !, J =:= N, !, Weight is -3),
-		(I =:= 2, !, J =:= (N-1), !, Weight is -4),
+		(I =:= 1, J =:= 2, Weight is -3, !);
+		(I =:= 2, J =:= 1, Weight is -3, !);
+		(I =:= 2, J =:= 2, Weight is -4, !);
+		(I =:= 1, J =:= (N-1), Weight is -3, !);
+		(I =:= 2, J =:= N, Weight is -3, !);
+		(I =:= 2, J =:= (N-1), Weight is -4, !);
 		/* Warning checked, Exp1 =:= Exp2 verifies that the VALUE (and not tree equivalent) of Exp1 and Exp2 are equal */
-		(I =:= (N-1), !, J =:= 1, !, Weight is -3),
-		(I =:= N, !, J =:= 2, !, Weight is -3),
-		(I =:= (N-1), !, J =:= 2, !, Weight is -4),
-		(I =:= (N-1), !, J =:= N, !, Weight is -3),
-		(I =:= N, !, J =:= (N-1), !, Weight is -3),
-		(I =:= (N-1), !, J =:= (N-1), !, Weight is -4),
+		(I =:= (N-1), J =:= 1, Weight is -3, !);
+		(I =:= N, J =:= 2, Weight is -3, !);
+		(I =:= (N-1), J =:= 2, Weight is -4, !);
+		(I =:= (N-1), J =:= N, Weight is -3, !);
+		(I =:= N, J =:= (N-1), Weight is -3, !);
+		(I =:= (N-1), J =:= (N-1), Weight is -4, !);
 
 		% Borders filling
-		(I =:= 1, J >= 3, J =< (N-2), Weight is 2),
-		(I =:= 2, J >= 3, J =< (N-2), Weight is -1),
-		(I =:= N, J >= 3, J =< (N-2), Weight is 2),
-		(I =:= (N-1), J >= 3, J =< (N-2), Weight is -1),
-		(J =:= 1, I >= 3, I =< (N-2), Weight is 2),
-		(J =:= 2, I >= 3, I =< (N-2), Weight is -1),
-		(J =:= N, I >= 3, I =< (N-2), Weight is 2),
-		(J =:= (N-1), I >= 3, I =< (N-2), Weight is -1)
+		(I =:= 1, J >= 3, J =< (N-2), Weight is 2, !);
+		(I =:= 2, J >= 3, J =< (N-2), Weight is -1, !);
+		(I =:= N, J >= 3, J =< (N-2), Weight is 2, !);
+		(I =:= (N-1), J >= 3, J =< (N-2), Weight is -1, !);
+		(J =:= 1, I >= 3, I =< (N-2), Weight is 2, !);
+		(J =:= 2, I >= 3, I =< (N-2), Weight is -1, !);
+		(J =:= N, I >= 3, I =< (N-2), Weight is 2, !);
+		(J =:= (N-1), I >= 3, I =< (N-2), Weight is -1, !)
 
 		;
 
 		% Centre diagonals filling
-		(I =:= J, Weight is 1),
-		(I =:= (N-J+1), Weight is 1)
+		(I =:= J, Weight is 1, !);
+		(I =:= (N-J+1), Weight is 1, !)
 
 		;
 
@@ -492,7 +492,7 @@ initialize_weight_board(I,J):-
 		Weight is 0
 	),
 
-	retract(weight_board(I,J,X)),
+	retract(weight_board(I,J,_)),
 	assert(weight_board(I,J,Weight)),
 	% Recursive call
 	((I =:= N, J =:= N, !) ;
