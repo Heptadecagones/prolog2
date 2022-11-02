@@ -359,7 +359,7 @@ staticval(pos(GridId,_,_),Val,Level):-
 	% added for test
 	;
 	(Level =:= 4,!,
-	 weighted_squares(I,J, Weight_val),
+	 weighted_squares_evaluation(GridId, Weight_val),
 	 Val is Weight_val).
 
 /* Heurstic evaluation function #1
@@ -426,14 +426,24 @@ corners_evaluation(GridId,Val):-
 /* Heuristic evaluation : weighted squares
 	Improvement : add a random value to the weight, in order to let the IA play the neighborhood of the corners
 	weighted_squares(+I, +J, -dimension, -Val) */
-/* To modify, take GridId as a parameter and not I and J (that are not used by the other heuristics) */
-weighted_squares(I,J,Val) :-
-	weight-board(I,J, Weight),
-	Max is div(Weight, 2),
-	Rand is random(abs(round(Max))),
-	Val is Weight + Rand,
-	write(Val),
-	write(Rand).
+weighted_squares_evaluation(GridId, MaxVal):-
+	weighted_squares(GridId, 1, 1, MaxVal).
+
+weighted_squares(Id, I, J, MaxVal) :-
+	slot(Id,coordinate(I,J),CurrentVal),
+	weight_board(I, J, Weight),
+	MaxModifier is div(Weight, 2),
+	Rand is random(abs(round(MaxModifier))),
+	SquareVal is Weight + Rand,
+	write(SquareVal),
+	write(Rand),
+
+	(CurrentVal =:= 0,!, SquareVal >= MaxVal, MaxVal is SquareVal),	% What if it is false?
+
+	dimension(N),
+
+	get_next_sequential_index(I,J,NewI,NewJ,N),
+	weighted_squares(Id, NewI, NewJ, MaxVal).
 
 /* change the location of this method after it is finished !!! */
 initialize_weight_board(I,J):-
@@ -688,8 +698,9 @@ get_game_level(L):-
 	write('1 = Beginner'),nl,	
 	write('2 = Intermediate'),nl,
 	write('3 = Advanced'),nl, 
+	write('4 = Weighted_squares'),nl, 
 	get_user_input(L), 
-	((integer(L), L >= 1,L =< 3,!)	% validate input	
+	((integer(L), L >= 1,L =< 4,!)	% validate input	
 	 ;
 	 (user_exit(L),!, fail)			% user wishes to quit
 	 ;
