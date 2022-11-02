@@ -446,14 +446,17 @@ weighted_squares(Id, I, J, MaxVal) :-
 	weighted_squares(Id, NewI, NewJ, MaxVal).
 
 /* change the location of this method after it is finished !!! */
-initialize_weight_board(I,J):-
-	dimension(N),
+initialize_weight_board(N, N, N):-
+	assert(weight_board(N,N,4)),!.
+
+initialize_weight_board(I,J,N):-
 	(
 		% Corners
 		(I =:= 1, J =:= 1, Weight is 4, !);
 		(I =:= 1, J =:= N, Weight is 4, !);
 		(I =:= N, J =:= 1, Weight is 4, !);
-		(I =:= N, J =:= N, Weight is 4, !);
+		/* We do not set this corner back, because it will be added at last */
+		%(I =:= N, J =:= N, Weight is 4, !);
 
 		% Corners neighbor
 		(I =:= 1, J =:= 2, Weight is -3, !);
@@ -483,7 +486,7 @@ initialize_weight_board(I,J):-
 		;
 
 		% Centre diagonals filling
-		(I =:= J, Weight is 1, !);
+		(I =:= J, J =\= 8, Weight is 1, !);	% Not takng into account the last square
 		(I =:= (N-J+1), Weight is 1, !)
 
 		;
@@ -492,13 +495,11 @@ initialize_weight_board(I,J):-
 		Weight is 0
 	),
 
-	retract(weight_board(I,J,_)),
+	%retract(weight_board(I,J,_)),
 	assert(weight_board(I,J,Weight)),
 	% Recursive call
-	((I =:= N, J =:= N, !) ;
-	(J =:= N, I =\= N, NewI is I + 1, NewJ is 1) ;
-	(I =\= N, J =\= N, NewI is I + 1, NewJ is J + 1)),
-	initialize_weight_board(NewI, NewJ).
+	get_next_sequential_index(I, J, NewI, NewJ,N),
+	initialize_weight_board(NewI, NewJ, N).
 
 /* get_hash_key(+Grid,-HashKey) 		                                 
    return a hash key for a given grid id to manage it's state in memory */
@@ -529,7 +530,7 @@ run:-
 	get_game_level(Level),
 	initialize_board(N),
 	print_starting_pos,
-	initialize_weight_board(1,1),
+	initialize_weight_board(1,1,N),
 	
 	% play against computer 
 	((Mode =< 2, play_interactive_game(Mode,Level,pos(0,1,_))	
