@@ -141,7 +141,30 @@ print_grid(GridID,I,J,N):-
 	  ((NewI < 10,!, tab(4)) ; tab(2)))
 	;
 	(NewI =:= I)),
-	print_grid(GridID,NewI,NewJ,N)).% recursive call 
+	print_grid(GridID,NewI,NewJ,N)).% recursive call
+
+/* print_weight_board - print current weight_board to current output stream */
+% main wieght printout routine: print_weight_board(+GridIdentifier) 
+print_weight_board:-
+	dimension(N),				% get dimension 
+	nl, tab(6),
+	print_grid_header(1,N),		% print grid column headers  
+	print_weight_board(1,1,N).	% print actual grid 
+
+% internal recursive routine to print the weight board: print_grid(+I,+J,+N)
+print_weight_board(I,J,N):-
+	WidthSpace = 1,
+	weight_board(I, J, Weight),
+	(write('['), write(Weight), write(']'), tab(WidthSpace)),
+
+	(I =:= N, J =:= N, !, nl)	% either last index or continue recursion 
+	;
+	(get_next_sequential_index(I, J, NewI, NewJ,N),
+	((NewI > I,!, nl, write(NewI), 
+	  ((NewI < 10,!, tab(4)) ; tab(2)))
+	;
+	(NewI =:= I)),
+	print_weight_board(NewI,NewJ,N)).% recursive call 
 
 % header printout routine - print_grid_header(+ColumnIndex,+Dimension)
 print_grid_header(J,N):-
@@ -486,7 +509,7 @@ initialize_weight_board(I,J,N):-
 		;
 
 		% Centre diagonals filling
-		(I =:= J, J =\= 8, Weight is 1, !);	% Not takng into account the last square
+		(I =:= J, J =\= N, Weight is 1, !);	% Not takng into account the last square
 		(I =:= (N-J+1), Weight is 1, !)
 
 		;
@@ -530,7 +553,8 @@ run:-
 	get_game_level(Level),
 	initialize_board(N),
 	print_starting_pos,
-	initialize_weight_board(1,1,N),
+	initialize_weight_board(1,1,N), nl,
+	print_weight_board,
 	
 	% play against computer 
 	((Mode =< 2, play_interactive_game(Mode,Level,pos(0,1,_))	
