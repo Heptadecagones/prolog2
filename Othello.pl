@@ -657,7 +657,7 @@ get_max_depth(Level,MaxDepth):-
 	(Level =:= 3,!, MaxDepth = 5) % advanced
 	% Added for test
 	;
-	(Level =:= 0, !, MaxDepth = 3)
+	(Level =:= 4,!, MaxDepth = 1)	% weighted_squares
 	).
 
 /* user_exit(+X) - check if user requested to quit. if so, turn on appropriate flag */
