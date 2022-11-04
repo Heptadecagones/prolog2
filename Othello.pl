@@ -450,23 +450,44 @@ corners_evaluation(GridId,Val):-
 	Improvement : add a random value to the weight, in order to let the IA play the neighborhood of the corners
 	weighted_squares(+I, +J, -dimension, -Val) */
 weighted_squares_evaluation(GridId, MaxVal):-
-	weighted_squares(GridId, 1, 1, MaxVal).
+	weighted_squares(GridId, 1, 1, MaxVal, -5).
 
-weighted_squares(Id, I, J, MaxVal) :-
+weighted_squares(Id, I, J, MaxVal, MaxTemp) :-
 	slot(Id,coordinate(I,J),CurrentVal),
 	weight_board(I, J, Weight),
-	MaxModifier is div(Weight, 2),
-	Rand is random(abs(round(MaxModifier))),
-	SquareVal is Weight + Rand,
-	write(SquareVal),
-	write(Rand),
-
-	(CurrentVal =:= 0,!, SquareVal >= MaxVal, MaxVal is SquareVal),	% What if it is false?
-
+	(
+		(
+		MaxModifier is div(Weight, 2),
+		MaxModifier =\= 0,
+		Rand is random(abs(round(MaxModifier))),
+		SquareVal is Weight + Rand
+		)
+		;
+		SquareVal is Weight
+	),
+	%write('SquareVal is '), write(SquareVal), nl,
+	%write('Rand is '), write(Rand), nl,
 	dimension(N),
 
-	get_next_sequential_index(I,J,NewI,NewJ,N),
-	weighted_squares(Id, NewI, NewJ, MaxVal).
+	(
+		(
+			/* WARNING: Here the algorithm is considering all squares that are
+				not empty, but what we want is to search for squares that
+				are legal to play upon. To be corrected (possibly with
+				get_legal_coordinates or validate_coordinate) */
+			CurrentVal =:= 0,
+			SquareVal >= MaxTemp,
+			NewMaxTemp is SquareVal
+		)
+		;
+		NewMaxTemp is MaxTemp
+	),	% What if it is false?
+	%write('MaxVal for I = '), write(I), write(' , J = '), write(J), write(' is '),
+	%write(NewMaxTemp), nl,
+	(((I =:= N, J =:= N,!, MaxVal is NewMaxTemp))
+	;
+	(get_next_sequential_index(I,J,NewI,NewJ,N),
+	weighted_squares(Id, NewI, NewJ, MaxVal, NewMaxTemp))).
 
 /* change the location of this method after it is finished !!! */
 initialize_weight_board(N, N, N):-
