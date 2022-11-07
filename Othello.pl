@@ -361,19 +361,19 @@ staticval(pos(GridId,_,_),Val,Level):-
 	 (Level =:= 5,!,
 	  c_x_evaluation(GridId,Val))
 	  ;
-	(Level =:= 6,!,
+	(Level =:= 101,!,
 	  pieces_count_evaluation(GridId,Val,_,_))
 	  ;
-	(Level =:= 7,!,
+	(Level =:= 102,!,
 	  pieces_count_evaluation(GridId,Val,_,_))
 	  ;
-	(Level =:= 8,!,
+	(Level =:= 103,!,
 	  pieces_count_evaluation(GridId,Val,_,_))
 	  ;
-	(Level =:= 9,!,
+	(Level =:= 104,!,
 	  pieces_count_evaluation(GridId,Val,_,_))
 	  ;	
-	(Level =:= 10,!,
+	(Level =:= 105,!,
 	  pieces_count_evaluation(GridId,Val,_,_))
 	.
 
@@ -536,9 +536,17 @@ play_automatic_game(Strategy,Count,Level,Level2,pos(Grid1,Computer1,_)):-
 	/* ((X is Count mod 5,X =:= 0,Count =\= 0,Strategy =:= 1 ,!,
 	 NewLevel is Level+1);
 	 (NewLevel is Level)),*/
-	((X is Count ,X =:= 10,Count =\= 0,Strategy =:= 1 ,!,
-	 NewLevel is 6);
-	 (NewLevel is Level)),
+	((Count>=0,Count=<12,Strategy =:= 1 ,!,
+	 NewLevel is 101);
+	 ((Count>12,Count=<24,Strategy =:= 1 ,!,
+	 NewLevel is 102);
+	 ((Count>24,Count=<36,Strategy =:= 1 ,!,
+	 NewLevel is 103);
+	 (Count>36,Count=<48,Strategy =:= 1 ,!,
+	 NewLevel is 104);
+	 (Count>48,Count=<60,Strategy =:= 1 ,!,
+	 NewLevel is 105);
+	 (NewLevel is Level)))),	 	
 	/*alphabeta*/
 	alphabeta(pos(Grid1,Computer1,_),_,_,Pos2,_,0,MaxDepth,NewLevel), % get best move 
 	Pos2 = pos(Grid2,Computer2,coordinate(I2,J2)),
