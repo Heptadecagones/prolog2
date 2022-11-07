@@ -412,7 +412,11 @@ staticval(pos(GridId,_,_),Val,Level):-
 	  corners_evaluation(GridId,CornersVal),
 	  block_adversaire(GridId,BlockVal),
 	  Val is (0.15 * CountVal) + (0.20 * MobilityVal) + (0.25 * CornersVal) + (0.40 * BlockVal))
-	.
+	  ;
+	(Level =:= 7,!,
+	  weighted_squares_evaluation(GridId, Weight_val),
+	  Val is Weight_val)
+	  .
 
 /* Heurstic evaluation function #1
    pieces_count_evaluation(+GridId,-Val,+MaxCount,+MinCount) 
