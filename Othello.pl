@@ -381,7 +381,7 @@ staticval(pos(GridId,_,_),Val,Level):-
 	 Val is (0.25 * CountVal) + (0.35 * MobilityVal) + (0.4 * CornersVal))
 	 ;
 	 (Level =:= 4,!,
-  	 Val is 0)
+  	 random(-1.0,1.0,R),Val is R)
 	 ;
 	 (Level =:= 5,!,
 	  c_x_evaluation(GridId,Val))
@@ -730,20 +730,15 @@ play_interactive_game(Count,Mode,Level,pos(GridId,Player1,_)):-
 	(get_legal_coordinates(GridId,Player1,ValidCoordinates),
 	 retractall(player_stuck(_)),
 	 write("Coup Numero :"),write(Count),NewCount is Count+1,
-	 /*si numero count  mod 5 ==0 on incremente le niveau*/
-	 ((X is Count mod 5,X =:= 0,Count =\= 0 ,!,
-	 NewLevel is Level+1);
-	 (NewLevel is Level)),
 	((%user to move 
-	 Mode =:= Player1,!,
-	 write("NewLevel: "),write(NewLevel),	
+	 Mode =:= Player1,!,	
 	 get_coordinate_from_user(Player1,ValidCoordinates,UserCoordinate),
 	 makeLegalMove(UserCoordinate,pos(GridId,Player1,_),pos(NewId,Player2,_)))
 	;		
 	(%computer to move
 	 get_max_depth(Level,MaxDepth),
 	 !,
-	 write("NewLevel: "),write(NewLevel),
+	 write("Level: "),write(Level),
 	 alphabeta(pos(GridId,Player1,_),_,_,pos(NewId,Player2,coordinate(I,J)),_,0,MaxDepth,Level),
 	 print_computer_move(I,J))),
 	
@@ -752,7 +747,7 @@ play_interactive_game(Count,Mode,Level,pos(GridId,Player1,_)):-
 	  write('current position after placing a piece on this slot -'),
 	  print_grid(NewId), sleep(1),
 	  ((Mode =:= Player1,!, print_a_compliment,!, sleep(1)) ; (sleep(0.75))),
-	  play_interactive_game(NewCount,Mode,NewLevel,pos(NewId,Player2,_))))  % continue to next round 
+	  play_interactive_game(NewCount,Mode,Level,pos(NewId,Player2,_))))  % continue to next round 
 	;
 	
 	% incase current player is stuck skip him or end game 
