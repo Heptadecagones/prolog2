@@ -384,10 +384,11 @@ staticval(pos(GridId,_,_),Val,Level):-
   	 random(-1.0,1.0,R),Val is R)
 	 ;
 	 (Level =:= 5,!,
-	  c_x_evaluation(GridId,Val))
+	 c_x_evaluation(GridId,
+	 Val))
 	  ;
 	(Level =:= 101,!,
-	  random(-1.0,1.0,R),Val is R)
+	 corners_evaluation(GridId,Val))
 	  ;
 	(Level =:= 102,!,
 	 corners_evaluation(GridId,Val))
@@ -459,6 +460,37 @@ mobility_evaluation(Grid,Val):-
 	TotalCount is MaxCount + MinCount,
 	((TotalCount =:= 0,!, Val is 0) ; (Val is Delta / TotalCount)))).
 
+c_x_evaluation(GridId,Val):-
+	dimension(N),
+	M is N-1,
+	slot(GridId,coordinate(1,2),C1),
+	slot(GridId,coordinate(2,1),C2),
+	slot(GridId,coordinate(1,M),C3),
+	slot(GridId,coordinate(M,1),C4),
+	slot(GridId,coordinate(2,N),C5),
+	slot(GridId,coordinate(N,2),C6),
+	slot(GridId,coordinate(N,M),C7),
+	slot(GridId,coordinate(M,N),C8),
+	slot(GridId,coordinate(2,2),X1),
+	slot(GridId,coordinate(2,M),X2),
+	slot(GridId,coordinate(M,2),X3),
+	slot(GridId,coordinate(M,M),X4),
+
+	((C1 =:= 0,!,C1Val is 0) ; (C1 =:= 1,!,C1Val is 0.1) ; (C1Val is -0.1)),
+	((C2 =:= 0,!,C2Val is 0) ; (C2 =:= 1,!,C2Val is 0.1) ; (C2Val is -0.1)),
+	((C3 =:= 0,!,C3Val is 0) ; (C3 =:= 1,!,C3Val is 0.1) ; (C3Val is -0.1)),
+	((C4 =:= 0,!,C4Val is 0) ; (C4 =:= 1,!,C4Val is 0.1) ; (C4Val is -0.1)),
+	((C5 =:= 0,!,C5Val is 0) ; (C5 =:= 1,!,C5Val is 0.1) ; (C5Val is -0.1)),
+	((C6 =:= 0,!,C6Val is 0) ; (C6 =:= 1,!,C6Val is 0.1) ; (C6Val is -0.1)),
+	((C7 =:= 0,!,C7Val is 0) ; (C7 =:= 1,!,C7Val is 0.1) ; (C7Val is -0.1)),
+	((C8 =:= 0,!,C8Val is 0) ; (C8 =:= 1,!,C8Val is 0.1) ; (C8Val is -0.1)),
+	((X1 =:= 0,!,X1Val is 0) ; (X1 =:= 1,!,X1Val is 0.05) ; (X1Val is -0.05)),
+	((X2 =:= 0,!,X2Val is 0) ; (X2 =:= 1,!,X2Val is 0.05) ; (X2Val is -0.05)),
+	((X3 =:= 0,!,X3Val is 0) ; (X3 =:= 1,!,X3Val is 0.05) ; (X3Val is -0.05)),
+	((X4 =:= 0,!,X4Val is 0) ; (X4 =:= 1,!,X4Val is 0.05) ; (X4Val is -0.05)),
+
+	Val is C1Val+C2Val+C3Val+C4Val+C5Val+C6Val+C7Val+C8Val+X1Val+X2Val+X3Val+X4Val.
+
 /* Heurstic evaluation function #3
    corners_evaluation(+Grid,-Val) 
    compare the number of captured cornes by each player	 */ 
@@ -470,7 +502,7 @@ corners_evaluation(GridId,Val):-
 	slot(GridId,coordinate(N,1),C3),
 	slot(GridId,coordinate(N,N),C4),
 	
-	% assign each corner a grade 1/4 according to it's value (empty\max\min)
+/* assign each corner a grade 1/4 according to it's value (empty\max\min)*/
 	((C1 =:= 0,!,C1Val is 0) ; (C1 =:= 1,!,C1Val is 0.25) ; (C1Val is -0.25)),
 	((C2 =:= 0,!,C2Val is 0) ; (C2 =:= 1,!,C2Val is 0.25) ; (C2Val is -0.25)),
 	((C3 =:= 0,!,C3Val is 0) ; (C3 =:= 1,!,C3Val is 0.25) ; (C3Val is -0.25)),
@@ -588,41 +620,6 @@ block_adversaire(Grid,Val):-
     % compare 
     (TotalCount is MaxCount + MinCount,
     ((TotalCount =:= 0,!, Val is 0) ; (Val is 1-(MaxCount/ TotalCount))))).
-	
-c_x_evaluation(GridId,Val):-
-	%Get x and c values
-	dimension(N),
-	slot(GridId,coordinate(1,2),C1),
-	slot(GridId,coordinate(2,1),C2),
-	slot(GridId,coordinate(1,N-1),C3),
-	slot(GridId,coordinate(N-1,1),C4),
-	slot(GridId,coordinate(2,N),C5),
-	slot(GridId,coordinate(N,2),C6),
-	slot(GridId,coordinate(N,N-1),C7),
-	slot(GridId,coordinate(N-1,N),C8),
-
-	slot(GridId,coordinate(2,2),X1),
-	slot(GridId,coordinate(2,N-1),X2),
-	slot(GridId,coordinate(N-1,2),X3),
-	slot(GridId,coordinate(N-1,N-1),X4),
-
-	% assign each corner a grade 1/4 according to it's value (empty\max\min)
-	((C1 =:= 0,!,C1Val is 0) ; (C1 =:= 1,!,C1Val is 0.1) ; (C1Val is -0.1)),
-	((C2 =:= 0,!,C2Val is 0) ; (C2 =:= 1,!,C2Val is 0.1) ; (C2Val is -0.1)),
-	((C3 =:= 0,!,C3Val is 0) ; (C3 =:= 1,!,C3Val is 0.1) ; (C3Val is -0.1)),
-	((C4 =:= 0,!,C4Val is 0) ; (C4 =:= 1,!,C4Val is 0.1) ; (C4Val is -0.1)),
-	((C5 =:= 0,!,C5Val is 0) ; (C1 =:= 1,!,C5Val is 0.1) ; (C5Val is -0.1)),
-	((C6 =:= 0,!,C6Val is 0) ; (C2 =:= 1,!,C6Val is 0.1) ; (C6Val is -0.1)),
-	((C7 =:= 0,!,C7Val is 0) ; (C3 =:= 1,!,C7Val is 0.1) ; (C7Val is -0.1)),
-	((C8 =:= 0,!,C8Val is 0) ; (C4 =:= 1,!,C8Val is 0.1) ; (C8Val is -0.1)),
-
-	((X1 =:= 0,!,X1Val is 0) ; (X1 =:= 1,!,X1Val is 0.05) ; (X1Val is -0.05)),
-	((X2 =:= 0,!,X2Val is 0) ; (X2 =:= 1,!,X2Val is 0.05) ; (X2Val is -0.05)),
-	((X3 =:= 0,!,X3Val is 0) ; (X3 =:= 1,!,X3Val is 0.05) ; (X3Val is -0.05)),
-	((X4 =:= 0,!,X4Val is 0) ; (X4 =:= 1,!,X4Val is 0.05) ; (X4Val is -0.05)),
-
-	% sum result of all corners
-	Val is -C1Val-C2Val-C3Val-C4Val-C5Val-C6Val-C7Val-C8Val-X1Val-X2Val-X3Val-X4Val.
 
 /* get_hash_key(+Grid,-HashKey) 		                                 
    return a hash key for a given grid id to manage it's state in memory */
@@ -651,13 +648,13 @@ run:-
 	get_board_dimension(N),
 	get_game_mode(Mode),	
 	get_game_level(Level),
+	get_strategy(Strategy),
 	get_game_level2(Level2),
 	initialize_board(N),
 	print_starting_pos,
 	Count is 0,
 	initialize_weight_board(1,1,N), nl,
 	print_weight_board,
-	Strategy is 1,
 	% play against computer 
 	((Mode =< 2, play_interactive_game(Count,Mode,Level,pos(0,1,_))	
 	 ;
@@ -784,7 +781,7 @@ get_max_depth(Level,MaxDepth):-
 	;
 	(Level =:= 4,!, MaxDepth = 1)% random
 	;
-	(Level =:= 5,!, MaxDepth = 1)% yannick
+	(Level =:= 5,!, MaxDepth = 1)% c_x_evaluation
 	;
 	(Level =:= 6,!, MaxDepth = 1)% block adversaire
 	;
@@ -865,9 +862,9 @@ get_game_level(L):-
 	write('2 = Intermediate'),nl,
 	write('3 = Advanced'),nl, 
 	write('4 = Aleatoire'),nl, 
-	write('5 = Yannick marche pas'),nl, 
+	write('5 = c_x evaluation'),nl, 
 	write('6 = block_adversaire'),nl, 
-	write('7 = weighted sqares'),nl, 
+	write('7 = weighted squares'),nl, 
 	get_user_input(L), 
 	((integer(L), L >= 1,L =< 7,!)	% validate input	
 	 ;
@@ -883,7 +880,7 @@ get_game_level2(L):-
 	write('2 = Intermediate'),nl,
 	write('3 = Advanced'),nl, 
 	write('4 = Aleatoire'),nl, 
-	write('5 = Yannick marche pas'),nl, 
+	write('5 = c_x evaluation'),nl, 
 	write('6 = block_adversaire'),nl, 
 	write('7 = weighted sqares'),nl, 
 	get_user_input(L), 
@@ -892,7 +889,19 @@ get_game_level2(L):-
 	 (user_exit(L),!, fail)			% user wishes to quit
 	 ;
 	 (print_invalid_input_message(L), fail)). % invalid input  
-	
+
+get_strategy(L):-
+	nl, write('first AI joue with Strategy ?? '),nl,
+	repeat, 
+	write('1 = Strategy 1'),nl,	
+	write('2 = no Strategy'),nl,
+
+	get_user_input(L), 
+	((integer(L), L >= 1,L =< 2,!)	% validate input	
+	 ;
+	 (user_exit(L),!, fail)			% user wishes to quit
+	 ;
+	 (print_invalid_input_message(L), fail)). % invalid input  	
 	
 /* get_game_mode(+M) M = mode of game: 1=human starts, 2=PC starts, 3=PC vs PC 
    the player who starts is the Max player, he playes with x's.                
