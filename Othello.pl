@@ -362,7 +362,7 @@ staticval(pos(GridId,_,_),Val,Level):-
 	  c_x_evaluation(GridId,Val))
 	  ;
 	(Level =:= 101,!,
-	  Val is 0)
+	  corners_evaluation(GridId,Val))
 	  ;
 	(Level =:= 102,!,
 	 corners_evaluation(GridId,Val))
@@ -380,6 +380,13 @@ staticval(pos(GridId,_,_),Val,Level):-
 	  ;	
 	(Level =:= 105,!,
 	  pieces_count_evaluation(GridId,Val,_,_))
+	  ;
+	(Level =:= 6,!,
+	  pieces_count_evaluation(GridId,CountVal,_,_),
+	  mobility_evaluation(GridId,MobilityVal),
+	  corners_evaluation(GridId,CornersVal),
+	  block_adversaire(GridId,BlockVal),
+	  Val is (0.15 * CountVal) + (0.20 * MobilityVal) + (0.25 * CornersVal) + (0.40 * BlockVal))
 	.
 
 /* Heurstic evaluation function #1
@@ -442,6 +449,22 @@ corners_evaluation(GridId,Val):-
 	
 	% sum result of all corners 
 	Val is C1Val+C2Val+C3Val+C4Val.	
+
+block_adversaire(Grid,Val):-
+    % get max player possible moves
+    ((((get_legal_coordinates(Grid,1,MaxMoves),!, length(MaxMoves,MaxCount)) 
+     ;
+     MaxCount is 0),
+
+     % get min player possible moves 
+    ((get_legal_coordinates(Grid,2,MinMoves),!, length(MinMoves,MinCount))
+     ;
+     MinCount is 0)),
+
+ 
+    % compare 
+    (TotalCount is MaxCount + MinCount,
+    ((TotalCount =:= 0,!, Val is 0) ; (Val is 1-(MaxCount/ TotalCount))))).
 	
 c_x_evaluation(GridId,Val):-
 	%Get x and c values
@@ -703,12 +726,16 @@ get_board_dimension(N):-
 get_game_level(L):-
 	nl, write('Okay. Let''s set the game''s level - '),nl,
 	repeat, 
-	write('Please enter a number between 1 to 3 as follows: '),nl,
+	write('Please enter a number between 1 to 7 as follows: '),nl,
 	write('1 = Beginner'),nl,	
 	write('2 = Intermediate'),nl,
 	write('3 = Advanced'),nl, 
+	write('4 = Aleatoire'),nl, 
+	write('5 = Yannick marche pas'),nl, 
+	write('6 = block_adversaire'),nl, 
+	write('7 = weighted sqares'),nl, 
 	get_user_input(L), 
-	((integer(L), L >= 1,L =< 3,!)	% validate input	
+	((integer(L), L >= 1,L =< 7,!)	% validate input	
 	 ;
 	 (user_exit(L),!, fail)			% user wishes to quit
 	 ;
@@ -717,12 +744,16 @@ get_game_level(L):-
 get_game_level2(L):-
 	nl, write('Okay. Let''s set the game''s level (if second AI) - '),nl,
 	repeat, 
-	write('Please enter a number between 1 to 3 as follows: '),nl,
+	write('Please enter a number between 1 to 7 as follows: '),nl,
 	write('1 = Beginner'),nl,	
 	write('2 = Intermediate'),nl,
 	write('3 = Advanced'),nl, 
+	write('4 = Aleatoire'),nl, 
+	write('5 = Yannick marche pas'),nl, 
+	write('6 = block_adversaire'),nl, 
+	write('7 = weighted sqares'),nl, 
 	get_user_input(L), 
-	((integer(L), L >= 1,L =< 3,!)	% validate input	
+	((integer(L), L >= 1,L =< 7,!)	% validate input	
 	 ;
 	 (user_exit(L),!, fail)			% user wishes to quit
 	 ;
