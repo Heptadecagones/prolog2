@@ -532,7 +532,7 @@ run:-
 	initialize_board(N),
 	print_starting_pos,
 	Count is 0,
-	Strategy is 1,
+	Strategy is 0,
 	% play against computer 
 	((Mode =< 2, play_interactive_game(Count,Mode,Level,pos(0,1,_))	
 	 ;
