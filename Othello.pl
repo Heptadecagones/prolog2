@@ -782,9 +782,15 @@ get_max_depth(Level,MaxDepth):-
 	;
 	(Level =:= 3,!, MaxDepth = 5)% advanced 
 	;
-	(Level =:= 4,!, MaxDepth = 1)
+	(Level =:= 4,!, MaxDepth = 1)% random
 	;
-	(Level >= 4,!, MaxDepth = 1)).	
+	(Level =:= 5,!, MaxDepth = 1)% yannick
+	;
+	(Level =:= 6,!, MaxDepth = 1)% block adversaire
+	;
+	(Level =:= 7,!, MaxDepth = 1)% weigted squares
+	;
+	(Level >= 8,!, MaxDepth = 1)).
 
 
 /* user_exit(+X) - check if user requested to quit. if so, turn on appropriate flag */
