@@ -359,7 +359,23 @@ staticval(pos(GridId,_,_),Val,Level):-
   	 Val is 0)
 	 ;
 	 (Level =:= 5,!,
-	  c_x_evaluation(GridId,Val)).
+	  c_x_evaluation(GridId,Val))
+	  ;
+	(Level =:= 6,!,
+	  pieces_count_evaluation(GridId,Val,_,_))
+	  ;
+	(Level =:= 7,!,
+	  pieces_count_evaluation(GridId,Val,_,_))
+	  ;
+	(Level =:= 8,!,
+	  pieces_count_evaluation(GridId,Val,_,_))
+	  ;
+	(Level =:= 9,!,
+	  pieces_count_evaluation(GridId,Val,_,_))
+	  ;	
+	(Level =:= 10,!,
+	  pieces_count_evaluation(GridId,Val,_,_))
+	.
 
 /* Heurstic evaluation function #1
    pieces_count_evaluation(+GridId,-Val,+MaxCount,+MinCount) 
@@ -488,7 +504,7 @@ run:-
 	initialize_board(N),
 	print_starting_pos,
 	Count is 0,
-	Strategy is 0,
+	Strategy is 1,
 	% play against computer 
 	((Mode =< 2, play_interactive_game(Count,Mode,Level,pos(0,1,_))	
 	 ;
@@ -513,12 +529,15 @@ play_automatic_game(Strategy,Count,Level,Level2,pos(Grid1,Computer1,_)):-
 	% incase current player has a legal move 
 	get_legal_coordinates(Grid1,Computer1,_),!,
 	get_max_depth(Level,MaxDepth),
-	write(" \nLevel of Computer 1 (x) is :"),write(Level),write(" \nLevel of Computer 2 (o) is :"),write(Level2),
+	write(" \nLevel of Computer 1 (x) is :"),write(Level),write(" \nLevel of Computer2 (o) is :"),write(Level2),
 	write(" \nStrategie du Computer 1 is :"),write(Strategy),
 	write(" \nCoup Numero :"),write(Count),NewCount is Count+1,
 	/*Strategie 1 : si numéro du coup mod 5 ==0 (on change d'heuristique après le 5ème coup))*/
-	 ((X is Count mod 5,X =:= 0,Count =\= 0,Strategy =:= 1 ,!,
+	/* ((X is Count mod 5,X =:= 0,Count =\= 0,Strategy =:= 1 ,!,
 	 NewLevel is Level+1);
+	 (NewLevel is Level)),*/
+	((X is Count ,X =:= 10,Count =\= 0,Strategy =:= 1 ,!,
+	 NewLevel is 6);
 	 (NewLevel is Level)),
 	/*alphabeta*/
 	alphabeta(pos(Grid1,Computer1,_),_,_,Pos2,_,0,MaxDepth,NewLevel), % get best move 
@@ -604,7 +623,9 @@ get_max_depth(Level,MaxDepth):-
 	;
 	(Level =:= 3,!, MaxDepth = 5)% advanced 
 	;
-	(Level =:= 4,!, MaxDepth = 1)).	
+	(Level =:= 4,!, MaxDepth = 1)
+	;
+	(Level >= 4,!, MaxDepth = 1)).	
 
 
 /* user_exit(+X) - check if user requested to quit. if so, turn on appropriate flag */
