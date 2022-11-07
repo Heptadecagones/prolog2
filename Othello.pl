@@ -362,16 +362,21 @@ staticval(pos(GridId,_,_),Val,Level):-
 	  c_x_evaluation(GridId,Val))
 	  ;
 	(Level =:= 101,!,
-	  pieces_count_evaluation(GridId,Val,_,_))
+	  Val is 0)
 	  ;
 	(Level =:= 102,!,
-	  pieces_count_evaluation(GridId,Val,_,_))
+	 corners_evaluation(GridId,Val))
 	  ;
 	(Level =:= 103,!,
-	  pieces_count_evaluation(GridId,Val,_,_))
+	 pieces_count_evaluation(GridId,CountVal,_,_),
+	 corners_evaluation(GridId,CornersVal),
+	 Val is (0.5 * CountVal) + (0.5 * CornersVal))
 	  ;
 	(Level =:= 104,!,
-	  pieces_count_evaluation(GridId,Val,_,_))
+	 pieces_count_evaluation(GridId,CountVal,_,_),
+	 mobility_evaluation(GridId,MobilityVal),
+	 corners_evaluation(GridId,CornersVal),
+	 Val is (0.25 * CountVal) + (0.35 * MobilityVal) + (0.4 * CornersVal))
 	  ;	
 	(Level =:= 105,!,
 	  pieces_count_evaluation(GridId,Val,_,_))
@@ -548,9 +553,12 @@ play_automatic_game(Strategy,Count,Level,Level2,pos(Grid1,Computer1,_)):-
 	 NewLevel is 105);
 	 (NewLevel is Level)))),	 	
 	/*alphabeta*/
-	alphabeta(pos(Grid1,Computer1,_),_,_,Pos2,_,0,MaxDepth,NewLevel), % get best move 
+	((Computer1 =:= 2 ,!,
+	LevelJeu is Level2);
+	(LevelJeu is NewLevel)),	
+	alphabeta(pos(Grid1,Computer1,_),_,_,Pos2,_,0,MaxDepth,LevelJeu), % get best move 
 	Pos2 = pos(Grid2,Computer2,coordinate(I2,J2)),
-	nl,write('Computer'),write(Computer1),write(' plays ('),
+	nl,write('Computer : '),write(Computer1),write(' plays ('),
 	write(I2),write(','),write(J2),write(').'),
 	nl, write('Current game position after placing a piece on this slot -'),
 	print_grid(Grid2),
