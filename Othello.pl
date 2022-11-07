@@ -387,7 +387,7 @@ staticval(pos(GridId,_,_),Val,Level):-
 	  c_x_evaluation(GridId,Val))
 	  ;
 	(Level =:= 101,!,
-	  corners_evaluation(GridId,Val))
+	  random(-1.0,1.0,R),Val is R)
 	  ;
 	(Level =:= 102,!,
 	 corners_evaluation(GridId,Val))
@@ -657,7 +657,7 @@ run:-
 	Count is 0,
 	initialize_weight_board(1,1,N), nl,
 	print_weight_board,
-	Strategy is 0,
+	Strategy is 1,
 	% play against computer 
 	((Mode =< 2, play_interactive_game(Count,Mode,Level,pos(0,1,_))	
 	 ;
@@ -695,9 +695,9 @@ play_automatic_game(Strategy,Count,Level,Level2,pos(Grid1,Computer1,_)):-
 	 NewLevel is 102);
 	 ((Count>24,Count=<36,Strategy =:= 1 ,!,
 	 NewLevel is 103);
-	 (Count>36,Count=<48,Strategy =:= 1 ,!,
+	 (Count>36,Count=<55,Strategy =:= 1 ,!,
 	 NewLevel is 104);
-	 (Count>48,Count=<60,Strategy =:= 1 ,!,
+	 (Count>55,Count=<60,Strategy =:= 1 ,!,
 	 NewLevel is 105);
 	 (NewLevel is Level)))),	 	
 	/*alphabeta*/
@@ -790,7 +790,15 @@ get_max_depth(Level,MaxDepth):-
 	;
 	(Level =:= 7,!, MaxDepth = 1)% weigted squares
 	;
-	(Level >= 8,!, MaxDepth = 1)).
+	(Level =:= 101,!, MaxDepth = 1)% phase 1
+	;	
+	(Level =:= 102,!, MaxDepth = 1)% phase 2
+	;	
+	(Level =:= 103,!, MaxDepth = 1)% phase 3
+	;	
+	(Level =:= 104,!, MaxDepth = 1)% phase 4
+	;
+	(Level =:= 105,!, MaxDepth = 5)).
 
 
 /* user_exit(+X) - check if user requested to quit. if so, turn on appropriate flag */
