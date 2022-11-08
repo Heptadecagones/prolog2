@@ -391,7 +391,7 @@ staticval(pos(GridId,_,_),Val,Level):-
 	 /*permet de rendre l'IA plus agressive*/
 	 TotalDelta is CountDelta + MobilityDelta,
 	 ((TotalDelta =:= 0,!, Delta is 0) ; (Delta is (0.7 * CountDelta + 0.3 * MobilityDelta) / TotalDelta)),
-	 Val is (0.14 * CountVal) + (0.4 * MobilityVal) + (0.44 * CornersVal) - (0.44 * CxVal) + (0.02 * Delta))
+	 Val is (0.15 * CountVal) + (0.4 * MobilityVal) + (0.44 * CornersVal) - (0.44 * CxVal) + (0.01 * Delta))
 	  ;
 	(Level =:= 101,!,
 	 corners_evaluation(GridId,Val))
