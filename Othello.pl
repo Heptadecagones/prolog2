@@ -426,8 +426,13 @@ staticval(pos(GridId,_,_),Val,Level):-
 	(Level =:= 7,!,
 	  weighted_squares_evaluation(GridId, Weight_val),
 	  Val is Weight_val)
-	  .
-
+	  ;
+	(Level =:= 9,!,
+  	 pieces_count_evaluation(GridId,CountVal,_,_),
+	 mobility_evaluation(GridId,MobilityVal),
+	 corners_evaluation(GridId,CornersVal),
+	 Val is (0.25 * CountVal) + (0.35 * MobilityVal) + (0.4 * CornersVal))
+	 .
 /* Heurstic evaluation function #1
    pieces_count_evaluation(+GridId,-Val,+MaxCount,+MinCount) 
    compare amount of pieces each player has on board 		*/
@@ -823,7 +828,10 @@ get_max_depth(Level,MaxDepth):-
 	;	
 	(Level =:= 104,!, MaxDepth = 1)% phase 4
 	;
-	(Level =:= 105,!, MaxDepth = 8)).
+	(Level =:= 105,!, MaxDepth = 8)
+	;
+	(Level =:= 9,!, MaxDepth = 1))
+	.
 
 
 /* user_exit(+X) - check if user requested to quit. if so, turn on appropriate flag */
@@ -893,8 +901,9 @@ get_game_level(L):-
 	write('5 = c_x evaluation'),nl, 
 	write('6 = block_adversaire'),nl, 
 	write('7 = weighted squares'),nl, 
+	write('9 = Advanced with depth=1'),nl, 
 	get_user_input(L), 
-	((integer(L), L >= 1,L =< 7,!)	% validate input	
+	((integer(L), L >= 1,L =< 9,!)	% validate input	
 	 ;
 	 (user_exit(L),!, fail)			% user wishes to quit
 	 ;
@@ -911,8 +920,9 @@ get_game_level2(L):-
 	write('5 = c_x evaluation'),nl, 
 	write('6 = block_adversaire'),nl, 
 	write('7 = weighted squares'),nl, 
+	write('9 = Advanced with depth=1'),nl, 
 	get_user_input(L), 
-	((integer(L), L >= 1,L =< 7,!)	% validate input	
+	((integer(L), L >= 1,L =< 9,!)	% validate input	
 	 ;
 	 (user_exit(L),!, fail)			% user wishes to quit
 	 ;
