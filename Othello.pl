@@ -705,8 +705,9 @@ run:-
 	print_greeting_message(PlayerName),
 	get_board_dimension(N),
 	get_game_mode(Mode),	
-	get_game_level(Level),
-	get_strategy(Strategy),
+	get_game_level(GetLevel),
+	((GetLevel=:=8,!,Strategy is 1,Level is 1);
+	(Level is GetLevel, Strategy is 0)),
 	get_game_level2(Level2),
 	initialize_board(N),
 	print_starting_pos,
@@ -919,7 +920,7 @@ get_board_dimension(N):-
 get_game_level(L):-
 	nl, write('Okay. Let''s set the game''s level - '),nl,
 	repeat, 
-	write('Please enter a number between 1 to 7 as follows: '),nl,
+	write('Please enter a number between 1 to 9 as follows: '),nl,
 	write('1 = Beginner'),nl,	
 	write('2 = Intermediate'),nl,
 	write('3 = Advanced'),nl, 
@@ -927,6 +928,7 @@ get_game_level(L):-
 	write('5 = c_x evaluation'),nl, 
 	write('6 = block_adversaire'),nl, 
 	write('7 = weighted squares'),nl, 
+	write('8 = heuristique changeante'),nl, 
 	write('9 = Advanced with depth=1'),nl, 
 	get_user_input(L), 
 	((integer(L), L >= 1,L =< 9,!)	% validate input	
@@ -938,7 +940,7 @@ get_game_level(L):-
 get_game_level2(L):-
 	nl, write('Okay. Let''s set the game''s level (if second AI) - '),nl,
 	repeat, 
-	write('Please enter a number between 1 to 7 as follows: '),nl,
+	write('Please enter a number between 1 to 9 as follows: '),nl,
 	write('1 = Beginner'),nl,	
 	write('2 = Intermediate'),nl,
 	write('3 = Advanced'),nl, 
