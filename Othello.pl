@@ -1,8 +1,8 @@
-/******************************************************************************
+/**********************PROGRAMME INITIAL***************************************
 *__________________________Mamam17 - Final Project____________________________*
 *					 20596 - Prolog & Artificial Intelligence				  *				
 *------------|----------------------------------------------------------------*														
-* Programmer | Chanan Welt			                              * 
+* Programmer | Chanan Welt	(MODIFIE PAR HEXANOME 17)		                              * 
 *------------|----------------------------------------------------------------*
 * File Name  | Othello.pl													  * 
 *------------|----------------------------------------------------------------*
@@ -18,16 +18,19 @@
 *			 | https://www.wikihow.com/Play-Othello							  *
 *------------|--------------------------------------------------------------*/
 /* dynamic utllity predicates & data structures  for interal representation   */
+
+/*TOUS LES AJOUTS DE l'HEXANOME 17 SONT ANNOTES par AJOUT:*/
+
 :- dynamic dimension/1.	 		% N - dimension of the quadratic board 		
 :- dynamic coordinate/1. 		% coordinate(I,J), indices of a specific slot on board 
 :- dynamic slot/3.				% slot(GridIdentifier,coordinate(I,J),ValueOnThisSlot)
-:- dynamic next_idle_grid_id/1. % numerator for managing grid id's. 
+:- dynamic next_idle_grid_id/1. % numerator for managing grid id.
 :- dynamic user_exited_game/0.  % flag indicating if user quit game.
 :- dynamic end_of_game/1.	 	% flag indicating end of game & last final grid
 :- dynamic no_legal_move/0. 	% flag indicating no legal moves for both players.
 :- dynamic player_stuck/1.   	% flag indicating this player has no legal moves 
 :- dynamic pos_evaluation/4. 	% (HashKey,Depth,Pos,Val) - precalculated position entries
-:- dynamic weight_board/3.		% identifies the weight of the squares. Is only retracted and asserted at the beginning to adapt to the dimension
+:- dynamic weight_board/3.		% AJOUT: identifies the weight of the squares. Is only retracted and asserted at the beginning to adapt to the dimension
 
 /* cleanup - clear memory from all dynamic predicates */ 
 cleanup:-
@@ -40,7 +43,7 @@ cleanup:-
 	retractall(no_legal_move),
 	retractall(player_stuck(_)),
 	retractall(pos_evaluation(_,_,_,_)),
-	retractall(weight_board(_,_,_)).
+	retractall(weight_board(_,_,_)). % AJOUT : Pour l heuristique weighted squares
 
 
 /******************************************************************************
@@ -357,32 +360,35 @@ betterof(Pos,Val,_,Val1,Pos,Val):-      % Pos better than Pos1
 betterof(_,_,Pos1,Val1,Pos1,Val1).         % Otherwise Pos1 better
 
 
-/**************************************************************
+/*****************HEURISTIQUES*********************************
 * staticVal(+Pos,-Val,+Level)	                              *
 * Val is the static value of a terminal (leaf) posistion Pos  *
 * Level is game level: 1=begginer, 2=intermediate, 3=advanced *
 ***************************************************************/
+/*AJOUT: LEVELS (=heuristiques) numero 4 et plus*/
 staticval(pos(GridId,_,_),Val,Level):-
-	% begginer level, only count pieces 
+/*begginer level, only count pieces*/
 	(Level =:= 1,!,							
 	 pieces_count_evaluation(GridId,Val,_,_))
 	;
-	% intemediate level, count pieces & approximate mobility 
+/*intemediate level, count pieces & approximate mobility*/ 
 	(Level =:= 2,!,
 	 pieces_count_evaluation(GridId,CountVal,_,_),
 	 mobility_evaluation(GridId,MobilityVal),
 	 Val is (0.4 * CountVal) + (0.6 * MobilityVal))
 	;
-	% advanced level, count pieces & approximate mobility & check corners 
+/*advanced level, count pieces & approximate mobility & check corners*/ 
 	(Level =:= 3,!,
   	 pieces_count_evaluation(GridId,CountVal,_,_),
 	 mobility_evaluation(GridId,MobilityVal),
 	 corners_evaluation(GridId,CornersVal),
 	 Val is (0.25 * CountVal) + (0.35 * MobilityVal) + (0.4 * CornersVal))
 	 ;
+/*heuristique coup au hasard*/
 	 (Level =:= 4,!,
   	 random(-1.0,1.0,R),Val is R)
 	 ;
+/*amelioration de l heuristique avancee en evitant les cases c et x*/
 	 (Level =:= 5,!,
   	 pieces_count_evaluationYannick(GridId,CountVal,CountDelta,_,_),
 	 mobility_evaluationYannick(GridId,MobilityVal,MobilityDelta),
@@ -393,19 +399,23 @@ staticval(pos(GridId,_,_),Val,Level):-
 	 ((TotalDelta =:= 0,!, Delta is 0) ; (Delta is (0.7 * CountDelta + 0.3 * MobilityDelta) / TotalDelta)),
 	 Val is (0.15 * CountVal) + (0.4 * MobilityVal) + (0.44 * CornersVal) - (0.44 * CxVal) + (0.01 * Delta))
 	  ;
+/*heuristique pour la phase 1 de notre heuristique changeante : joue les coins*/
 	(Level =:= 101,!,
 	 corners_evaluation(GridId,Val))
 	  ;
+/*heuristique pour la phase 2 de notre heuristique changeante : joue les coins*/	  
 	(Level =:= 102,!,
 	 pieces_count_evaluation(GridId,CountVal,_,_),
 	 corners_evaluation(GridId,CornersVal),
 	 Val is (0.5 * CountVal) + (0.5 * CornersVal))
 	  ;
+/*heuristique pour la phase 3 de notre heuristique changeante : joue les coins et la stabilite*/	
 	(Level =:= 103,!,
 	 pieces_count_evaluation(GridId,CountVal,_,_),
 	 corners_evaluation(GridId,CornersVal),
 	 Val is (0.5 * CountVal) + (0.5 * CornersVal))
 	  ;
+/*heuristique pour la phase 4 de notre heuristique changeante : joue les coins et la stabilite et le blocage de l adversaire*/	
 	(Level =:= 104,!,
 	  pieces_count_evaluation(GridId,CountVal,_,_),
 	  mobility_evaluation(GridId,MobilityVal),
@@ -413,9 +423,11 @@ staticval(pos(GridId,_,_),Val,Level):-
 	  block_adversaire(GridId,BlockVal),
 	  Val is (0.15 * CountVal) + (0.20 * MobilityVal) + (0.25 * CornersVal) + (0.40 * BlockVal))
 	  ;	
+/*heuristique pour la phase derniere de notre heuristique changeante : joue le nombre de piede (combine avec la profondeur jusqua la fin du jeu)*/	
 	(Level =:= 105,!,
 	  pieces_count_evaluation(GridId,Val,_,_))
 	  ;
+/*heuristique de blocage de l adversaire*/
 	(Level =:= 6,!,
 	  pieces_count_evaluation(GridId,CountVal,_,_),
 	  mobility_evaluation(GridId,MobilityVal),
@@ -423,10 +435,12 @@ staticval(pos(GridId,_,_),Val,Level):-
 	  block_adversaire(GridId,BlockVal),
 	  Val is (0.15 * CountVal) + (0.20 * MobilityVal) + (0.25 * CornersVal) + (0.40 * BlockVal))
 	  ;
+/*heuristique weighted squares*/
 	(Level =:= 7,!,
 	  weighted_squares_evaluation(GridId, Weight_val),
 	  Val is Weight_val)
 	  ;
+/*heuristique avancee (combinee avec une profondeur moins grande pour un calcul plus rapide mais moins efficace)*/
 	(Level =:= 9,!,
   	 pieces_count_evaluation(GridId,CountVal,_,_),
 	 mobility_evaluation(GridId,MobilityVal),
@@ -441,13 +455,9 @@ pieces_count_evaluation(GridId,Val,MaxCount,MinCount):-
 	TotalCount is MaxCount + MinCount,
 	Val is (MaxCount - MinCount) / TotalCount.
 
-pieces_count_evaluationYannick(GridId,Val,Delta,MaxCount,MinCount):-
-	pieces_count(GridId,MaxCount,0,MinCount,0,1,1),
-	TotalCount is MaxCount + MinCount,
-	Delta is MaxCount - MinCount,
-	Val is Delta / TotalCount.
 
-% internal recursive accumulative helper routine 
+
+/*internal recursive accumulative helper routine */
 pieces_count(Id,MaxTotal,MaxTemp,MinTotal,MinTemp,I,J):-
 	slot(Id,coordinate(I,J),CurrentVal), 
 	((CurrentVal =:= 0,!, NewMaxTemp is MaxTemp, NewMinTemp is MinTemp)
@@ -480,6 +490,14 @@ mobility_evaluation(Grid,Val):-
 	TotalCount is MaxCount + MinCount,
 	((TotalCount =:= 0,!, Val is 0) ; (Val is Delta / TotalCount)))).
 
+/*AJOUT: calcul pieces count pour la 5*/
+pieces_count_evaluationYannick(GridId,Val,Delta,MaxCount,MinCount):-
+	pieces_count(GridId,MaxCount,0,MinCount,0,1,1),
+	TotalCount is MaxCount + MinCount,
+	Delta is MaxCount - MinCount,
+	Val is Delta / TotalCount.
+
+/*AJOUT: calcul mobilite pour la 5*/
 mobility_evaluationYannick(Grid,Val,Delta):-
 	((((get_legal_coordinates(Grid,1,MaxMoves),!, length(MaxMoves,MaxCount)) 
 	 ;
@@ -492,7 +510,7 @@ mobility_evaluationYannick(Grid,Val,Delta):-
 	(Delta is MaxCount - MinCount,
 	TotalCount is MaxCount + MinCount,
 	((TotalCount =:= 0,!, Val is 0) ; (Val is Delta / TotalCount)))).
-
+/*AJOUT: calcul c_x pour la 5*/
 c_x_evaluation(GridId,Val):-
 	dimension(N),
 	M is N-1,
@@ -544,7 +562,9 @@ corners_evaluation(GridId,Val):-
 	% sum result of all corners 
 	Val is C1Val+C2Val+C3Val+C4Val.	
 
-/* Heuristic evaluation : weighted squares
+/*AJOUT: calcul pour la 7*/
+
+/*Heuristic evaluation : weighted squares
 	Improvement : add a random value to the weight, in order to let the IA play the neighborhood of the corners
 	weighted_squares(+I, +J, -dimension, -Val) */
 weighted_squares_evaluation(GridId, MaxVal):-
@@ -582,7 +602,7 @@ weighted_squares(Id, MaxVal, MaxTemp, [(I,J)|OtherMoves]) :-
 	;
 	(weighted_squares(Id, MaxVal, NewMaxTemp, OtherMoves))).
 
-/* change the location of this method after it is finished !!! */
+/*AJOUT: calcul pour la 7*/
 initialize_weight_board(N, N, N):-
 	assert(weight_board(N,N,4)),!.
 
@@ -637,7 +657,8 @@ initialize_weight_board(I,J,N):-
 	% Recursive call
 	get_next_sequential_index(I, J, NewI, NewJ,N),
 	initialize_weight_board(NewI, NewJ, N).
-
+	
+/*AJOUT: calcul pour la 6*/
 block_adversaire(Grid,Val):-
     % get max player possible moves
     ((((get_legal_coordinates(Grid,1,MaxMoves),!, length(MaxMoves,MaxCount)) 
@@ -673,6 +694,10 @@ get_hash_key(Grid,[Head|Tail],I,J,N):-		% case 2 of internal routine: keep recur
 /****************************************************************************
 *__________________Game application & I\O interaction module________________*
 ***************************************************************************/
+
+/*AJOUT: augmentation des possiblites de choix dans l'appli : IA niveau a contre IA niveau b
+													 		  IA avec strategie (heuristique changeante) contre IA niveau b*/
+
 % main program to initiate entire application: run/0
 run:-
 	print_welcome_message,
@@ -708,6 +733,7 @@ run:-
 * Automatic game AI vs AI                                                 
 * play_automatic_game(+Strategy,+Count,+Level,+Level2, +pos(Grid1,Computer1,_))                    
 *************************************************************************/
+/*AJOUT: calcul du numero de coup, computer1 et computer2 joue avec leur niveau respectif, changement du niveau dans la partie (heuristique changeante)*/
 play_automatic_game(Strategy,Count,Level,Level2,pos(Grid1,Computer1,_)):-
 	% incase current player has a legal move 
 	get_legal_coordinates(Grid1,Computer1,_),!,
@@ -715,10 +741,7 @@ play_automatic_game(Strategy,Count,Level,Level2,pos(Grid1,Computer1,_)):-
 	write(" \nLevel of Computer 1 (x) is :"),write(Level),write(" \nLevel of Computer2 (o) is :"),write(Level2),
 	write(" \nStrategie du Computer 1 is :"),write(Strategy),
 	write(" \nCoup Numero :"),write(Count),NewCount is Count+1,
-	/*Strategie 1 : si numéro du coup mod 5 ==0 (on change d'heuristique après le 5ème coup))*/
-	/* ((X is Count mod 5,X =:= 0,Count =\= 0,Strategy =:= 1 ,!,
-	 NewLevel is Level+1);
-	 (NewLevel is Level)),*/
+	/*AJOUT: heuristique changeante => changement du niveau (= de l heuristique) en fct du numero de coup*/
 	((Count>=0,Count=<12,Strategy =:= 1 ,!,
 	 NewLevel is 101);
 	 ((Count>12,Count=<24,Strategy =:= 1 ,!,
@@ -729,7 +752,8 @@ play_automatic_game(Strategy,Count,Level,Level2,pos(Grid1,Computer1,_)):-
 	 NewLevel is 104);
 	 (Count>52,Count=<60,Strategy =:= 1 ,!,
 	 NewLevel is 105);
-	 (NewLevel is Level)))),	 	
+	 (NewLevel is Level)))),	 
+
 	/*alphabeta*/
 	((Computer1 =:= 2 ,!,
 	LevelJeu is Level2);
@@ -805,6 +829,7 @@ get_other_player(Player1,Player2):-
 	(Player1 =:= 2, Player2 is 1).
 	
 /* get_max_depth(+Level,-MaxDepth) : depth for alphabeta according to game level*/
+/*AJOUT: Niveau de Profondeur de nos heuristiques (4 et plus)*/
 get_max_depth(Level,MaxDepth):-
 	((Level =:= 1,!, MaxDepth = 1)	% beginner 
 	;
@@ -842,6 +867,7 @@ user_exit(X):-
 /*************************************************************************
 * I\O Routines                                                           *
 *************************************************************************/
+/*AJOUT: Divers changements dans le jeu, le menu... afin de jouer avec nos nouvelles heuristiques dans l application*/
 
 /* get_user_input(-InputString) : main input routine                           
    get next line from input stream, return first token, drop rest of the line  */
