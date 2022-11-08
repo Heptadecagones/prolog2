@@ -384,8 +384,11 @@ staticval(pos(GridId,_,_),Val,Level):-
   	 random(-1.0,1.0,R),Val is R)
 	 ;
 	 (Level =:= 5,!,
-	 c_x_evaluation(GridId,
-	 Val))
+  	 pieces_count_evaluation(GridId,CountVal,_,_),
+	 mobility_evaluation(GridId,MobilityVal),
+	 corners_evaluation(GridId,CornersVal),
+	 c_x_evaluation(GridId,CxVal),
+	 Val is (0.14 * CountVal) + (0.4 * MobilityVal) + (0.44 * CornersVal) - (0.44 * CxVal))
 	  ;
 	(Level =:= 101,!,
 	 corners_evaluation(GridId,Val))
