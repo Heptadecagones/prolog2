@@ -384,11 +384,14 @@ staticval(pos(GridId,_,_),Val,Level):-
   	 random(-1.0,1.0,R),Val is R)
 	 ;
 	 (Level =:= 5,!,
-  	 pieces_count_evaluation(GridId,CountVal,_,_),
-	 mobility_evaluation(GridId,MobilityVal),
+  	 pieces_count_evaluationYannick(GridId,CountVal,CountDelta,_,_),
+	 mobility_evaluationYannick(GridId,MobilityVal,MobilityDelta),
 	 corners_evaluation(GridId,CornersVal),
 	 c_x_evaluation(GridId,CxVal),
-	 Val is (0.14 * CountVal) + (0.4 * MobilityVal) + (0.44 * CornersVal) - (0.44 * CxVal))
+	 /*permet de rendre l'IA plus agressive*/
+	 TotalDelta is CountDelta + MobilityDelta,
+	 ((TotalDelta =:= 0,!, Delta is 0) ; (Delta is (0.7 * CountDelta + 0.3 * MobilityDelta) / TotalDelta)),
+	 Val is (0.14 * CountVal) + (0.4 * MobilityVal) + (0.44 * CornersVal) - (0.44 * CxVal) + (0.02 * Delta))
 	  ;
 	(Level =:= 101,!,
 	 corners_evaluation(GridId,Val))
@@ -433,6 +436,12 @@ pieces_count_evaluation(GridId,Val,MaxCount,MinCount):-
 	TotalCount is MaxCount + MinCount,
 	Val is (MaxCount - MinCount) / TotalCount.
 
+pieces_count_evaluationYannick(GridId,Val,Delta,MaxCount,MinCount):-
+	pieces_count(GridId,MaxCount,0,MinCount,0,1,1),
+	TotalCount is MaxCount + MinCount,
+	Delta is MaxCount - MinCount,
+	Val is Delta / TotalCount.
+
 % internal recursive accumulative helper routine 
 pieces_count(Id,MaxTotal,MaxTemp,MinTotal,MinTemp,I,J):-
 	slot(Id,coordinate(I,J),CurrentVal), 
@@ -462,6 +471,19 @@ mobility_evaluation(Grid,Val):-
 	 MinCount is 0)),
 
 	% compare 
+	(Delta is MaxCount - MinCount,
+	TotalCount is MaxCount + MinCount,
+	((TotalCount =:= 0,!, Val is 0) ; (Val is Delta / TotalCount)))).
+
+mobility_evaluationYannick(Grid,Val,Delta):-
+	((((get_legal_coordinates(Grid,1,MaxMoves),!, length(MaxMoves,MaxCount)) 
+	 ;
+	 MaxCount is 0),
+	 
+	((get_legal_coordinates(Grid,2,MinMoves),!, length(MinMoves,MinCount))
+	 ;
+	 MinCount is 0)),
+
 	(Delta is MaxCount - MinCount,
 	TotalCount is MaxCount + MinCount,
 	((TotalCount =:= 0,!, Val is 0) ; (Val is Delta / TotalCount)))).
