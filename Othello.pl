@@ -391,7 +391,9 @@ staticval(pos(GridId,_,_),Val,Level):-
 	 corners_evaluation(GridId,Val))
 	  ;
 	(Level =:= 102,!,
-	 corners_evaluation(GridId,Val))
+	 pieces_count_evaluation(GridId,CountVal,_,_),
+	 corners_evaluation(GridId,CornersVal),
+	 Val is (0.5 * CountVal) + (0.5 * CornersVal))
 	  ;
 	(Level =:= 103,!,
 	 pieces_count_evaluation(GridId,CountVal,_,_),
