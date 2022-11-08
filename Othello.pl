@@ -399,10 +399,11 @@ staticval(pos(GridId,_,_),Val,Level):-
 	 Val is (0.5 * CountVal) + (0.5 * CornersVal))
 	  ;
 	(Level =:= 104,!,
-	 pieces_count_evaluation(GridId,CountVal,_,_),
-	 mobility_evaluation(GridId,MobilityVal),
-	 corners_evaluation(GridId,CornersVal),
-	 Val is (0.25 * CountVal) + (0.35 * MobilityVal) + (0.4 * CornersVal))
+	  pieces_count_evaluation(GridId,CountVal,_,_),
+	  mobility_evaluation(GridId,MobilityVal),
+	  corners_evaluation(GridId,CornersVal),
+	  block_adversaire(GridId,BlockVal),
+	  Val is (0.15 * CountVal) + (0.20 * MobilityVal) + (0.25 * CornersVal) + (0.40 * BlockVal))
 	  ;	
 	(Level =:= 105,!,
 	  pieces_count_evaluation(GridId,Val,_,_))
@@ -692,9 +693,9 @@ play_automatic_game(Strategy,Count,Level,Level2,pos(Grid1,Computer1,_)):-
 	 NewLevel is 102);
 	 ((Count>24,Count=<36,Strategy =:= 1 ,!,
 	 NewLevel is 103);
-	 (Count>36,Count=<55,Strategy =:= 1 ,!,
+	 (Count>36,Count=<52,Strategy =:= 1 ,!,
 	 NewLevel is 104);
-	 (Count>55,Count=<60,Strategy =:= 1 ,!,
+	 (Count>52,Count=<60,Strategy =:= 1 ,!,
 	 NewLevel is 105);
 	 (NewLevel is Level)))),	 	
 	/*alphabeta*/
@@ -795,7 +796,7 @@ get_max_depth(Level,MaxDepth):-
 	;	
 	(Level =:= 104,!, MaxDepth = 1)% phase 4
 	;
-	(Level =:= 105,!, MaxDepth = 5)).
+	(Level =:= 105,!, MaxDepth = 8)).
 
 
 /* user_exit(+X) - check if user requested to quit. if so, turn on appropriate flag */
@@ -882,7 +883,7 @@ get_game_level2(L):-
 	write('4 = Aleatoire'),nl, 
 	write('5 = c_x evaluation'),nl, 
 	write('6 = block_adversaire'),nl, 
-	write('7 = weighted sqares'),nl, 
+	write('7 = weighted squares'),nl, 
 	get_user_input(L), 
 	((integer(L), L >= 1,L =< 7,!)	% validate input	
 	 ;
