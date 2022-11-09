@@ -436,6 +436,19 @@ staticval(pos(GridId,_,_),Val,Level):-
 	  Val is (0.15 * CountVal) + (0.20 * MobilityVal) + (0.25 * CornersVal) + (0.40 * BlockVal))
 	  ;
 /*heuristique weighted squares*/
+/* IMPORTANT : cette heuristique ne doit etre utilisee qu'en mode Joueur vs IA */
+/* Problemes connus :
+	- a la fin du programme, l'IA continue de vouloir jouer, bloquant le programme
+	sur un affichage d'un coup joue repete en boucle (on ne peut donc pas utiliser
+	le mode IA vs IA)
+	- l'heuristique peut ne plus trouver de cases jouables pour une raison inconnue,
+	dans ce cas elle joue sur une case deja jouee, ce qui a pour consequence de faire
+	revenir un coup en arriere (peut bloquer le jeu)
+	- l'heuristique peut tourner longtemps avat de revenir. Quand le temps d'attente
+	est superieur a 5 secondes, arretez le programme.
+   Il est tout de meme possible de tester le fonctionnement sur une petite partie
+   (privilegiez une partie sur un othellier de 6x6).
+*/ 
 	(Level =:= 7,!,
 	  weighted_squares_evaluation(GridId, Weight_val),
 	  Val is Weight_val)
