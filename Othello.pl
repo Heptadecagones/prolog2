@@ -2,7 +2,7 @@
 *__________________________Mamam17 - Final Project____________________________*
 *					 20596 - Prolog & Artificial Intelligence				  *				
 *------------|----------------------------------------------------------------*														
-* Programmer | Chanan Welt	(MODIFIE PAR HEXANOME 17)		                              * 
+* Programmer | Chanan Welt	(MODIFIE PAR HEXANOME 4144)		                  * 
 *------------|----------------------------------------------------------------*
 * File Name  | Othello.pl													  * 
 *------------|----------------------------------------------------------------*
@@ -19,7 +19,7 @@
 *------------|--------------------------------------------------------------*/
 /* dynamic utllity predicates & data structures  for interal representation   */
 
-/*TOUS LES AJOUTS DE l'HEXANOME 17 SONT ANNOTES par AJOUT:*/
+/*TOUS LES AJOUTS DE l'HEXANOME 4144 SONT ANNOTES par AJOUT:*/
 
 :- dynamic dimension/1.	 		% N - dimension of the quadratic board 		
 :- dynamic coordinate/1. 		% coordinate(I,J), indices of a specific slot on board 
