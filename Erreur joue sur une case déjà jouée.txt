@@ -1,2 +1,0 @@
-Problème:
-Le programme ne trouve plus de case jouables après en avoir testé une.

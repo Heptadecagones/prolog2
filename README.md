@@ -1,3 +1,5 @@
+#La documentation en hebreux est celle du développeur initial
+#le readMe contient quelques infos sur les heuristiques du developpeur et de notre groupe, mais tout a ete mieux explique dans la presentation
 # Notes on documentation
 
 #[Source I](https://courses.cs.washington.edu/courses/cse573/04au/Project/mini1/RUSSIA/Final_Paper.pdf)
